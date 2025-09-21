@@ -111,7 +111,6 @@
                 <li><a class="dropdown-item" href="{{ url_for('new_product', bill_id=bill.id) }}"><i class="fas fa-plus me-2"></i>Add Product</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="{{ url_for('export_bill_csv', bill_id=bill.id) }}"><i class="fas fa-file-csv me-2"></i>Export CSV</a></li>
-                <li><a class="dropdown-item" href="{{ url_for('export_bill_excel', bill_id=bill.id) }}"><i class="fas fa-file-excel me-2"></i>Export Excel</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteBillModal"><i class="fas fa-trash-alt me-2"></i>Delete Bill</a></li>
             </ul>
@@ -359,9 +358,6 @@
                     <div class="d-grid gap-2" role="group" aria-labelledby="export-options-heading">
                         <a href="{{ url_for('export_bill_csv', bill_id=bill.id) }}" class="btn btn-outline-primary" aria-label="Export bill data as CSV file">
                             <i class="fas fa-file-csv me-2" aria-hidden="true"></i>Export as CSV
-                        </a>
-                        <a href="{{ url_for('export_bill_excel', bill_id=bill.id) }}" class="btn btn-outline-primary" aria-label="Export bill data as Excel file">
-                            <i class="fas fa-file-excel me-2" aria-hidden="true"></i>Export as Excel
                         </a>
                     </div>
                 </div>

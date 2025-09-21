@@ -218,3 +218,13 @@ class Product(db.Model):
     
     def __repr__(self):
         return f'<Product {self.name} in Bill {self.bill_id}>'
+    
+    @property
+    def members_count(self):
+        """Get the number of members involved in this product"""
+        return len(self.members_involved)
+    
+    @property
+    def payer_name(self):
+        """Get the name of the member who paid for this product"""
+        return self.payer.name if self.payer else 'Unknown'

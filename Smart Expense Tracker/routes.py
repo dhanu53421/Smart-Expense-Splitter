@@ -5,7 +5,7 @@ from smart_expense_splitter import app, db
 from models import User, Group, Member, Bill, Product, ProductMember
 from forms import LoginForm, RegistrationForm, GroupForm, MemberForm, BillForm, ProductForm
 from datetime import datetime
-import pandas as pd
+# import pandas as pd
 import io
 
 # Index route
@@ -217,7 +217,9 @@ def bill_detail(bill_id):
             'shared_products': [{
                 'id': p.id,
                 'name': p.name,
-                'price': p.price
+                'price': p.price,
+                'members_count': len(p.members_involved),
+                'payer_name': p.payer.name if p.payer else 'Unknown'
             } for p in data['shared_products']]
         }
     
@@ -343,7 +345,7 @@ def delete_product(product_id):
     flash(f'Product "{product.name}" deleted successfully!', 'success')
     return redirect(url_for('bill_detail', bill_id=bill_id))
 
-# Export routes
+# Export routes - simple CSV export without pandas
 @app.route('/bill/<int:bill_id>/export/csv')
 @login_required
 def export_bill_csv(bill_id):
@@ -352,12 +354,23 @@ def export_bill_csv(bill_id):
         flash('You do not have permission to export this bill.', 'danger')
         return redirect(url_for('dashboard'))
     
-    # Create a DataFrame for the bill summary
+    # Get bill summary and settlement data
     member_summary = bill.get_member_summary()
     settlement = bill.get_settlement_summary()
     
-    # Create member summary DataFrame
-    summary_data = []
+    # Create CSV content manually
+    csv_content = []
+    
+    # Add bill information
+    csv_content.append(f"Bill: {bill.title}")
+    csv_content.append(f"Date: {bill.date}")
+    csv_content.append(f"Group: {bill.group.name}")
+    csv_content.append("")
+    
+    # Add member summary
+    csv_content.append("Member Summary:")
+    csv_content.append("Member,Products,Total Paid,Total Owed,Net Balance")
+    
     for member_id, data in member_summary.items():
         member = data['member']
         products_info = []
@@ -367,143 +380,117 @@ def export_bill_csv(bill_id):
             shared_info = f"shared with {', '.join(shared_with)}" if shared_with else "independent"
             products_info.append(f"{product.name} ({shared_info}): ${product_data['share']:.2f}")
         
-        summary_data.append({
-            'Member': member.name,
-            'Products': '\n'.join(products_info),
-            'Total Paid': f"${data['paid']:.2f}",
-            'Total Owed': f"${data['owes']:.2f}",
-            'Net Balance': f"${data['net']:.2f}"
-        })
+        products_str = '; '.join(products_info)
+        csv_content.append(f'"{member.name}","{products_str}","${data["paid"]:.2f}","${data["owes"]:.2f}","${data["net"]:.2f}"')
     
-    summary_df = pd.DataFrame(summary_data)
+    csv_content.append("")
     
-    # Create settlement DataFrame
-    settlement_data = []
+    # Add settlement summary
+    csv_content.append("Settlement Summary:")
+    csv_content.append("From,To,Amount")
+    
     for transaction in settlement:
-        settlement_data.append({
-            'From': transaction['from_member'].name,
-            'To': transaction['to_member'].name,
-            'Amount': f"${transaction['amount']:.2f}"
-        })
+        csv_content.append(f'"{transaction["from_member"].name}","{transaction["to_member"].name}","${transaction["amount"]:.2f}"')
     
-    settlement_df = pd.DataFrame(settlement_data)
-    
-    # Create a buffer to store the CSV
-    buffer = io.StringIO()
-    
-    # Write the bill information
-    buffer.write(f"Bill: {bill.title}\n")
-    buffer.write(f"Date: {bill.date}\n")
-    buffer.write(f"Group: {bill.group.name}\n\n")
-    
-    # Write the member summary
-    buffer.write("Member Summary:\n")
-    summary_df.to_csv(buffer, index=False)
-    buffer.write("\n\n")
-    
-    # Write the settlement summary
-    buffer.write("Settlement Summary:\n")
-    settlement_df.to_csv(buffer, index=False)
-    
-    # Set the buffer position to the beginning
-    buffer.seek(0)
+    # Join all lines with newlines
+    csv_string = '\n'.join(csv_content)
     
     # Create a response with the CSV file
     return send_file(
-        io.BytesIO(buffer.getvalue().encode()),
+        io.BytesIO(csv_string.encode()),
         mimetype='text/csv',
         as_attachment=True,
         download_name=f"{bill.title.replace(' ', '_')}_summary.csv"
     )
 
-@app.route('/bill/<int:bill_id>/export/excel')
-@login_required
-def export_bill_excel(bill_id):
-    bill = Bill.query.get_or_404(bill_id)
-    if bill.group.user_id != current_user.id:
-        flash('You do not have permission to export this bill.', 'danger')
-        return redirect(url_for('dashboard'))
-    
-    # Create a DataFrame for the bill summary
-    member_summary = bill.get_member_summary()
-    settlement = bill.get_settlement_summary()
-    
-    # Create member summary DataFrame
-    summary_data = []
-    for member_id, data in member_summary.items():
-        member = data['member']
-        products_info = []
-        for product_data in data['products']:
-            product = product_data['product']
-            shared_with = [Member.query.get(m_id).name for m_id in product_data['shared_with']]
-            shared_info = f"shared with {', '.join(shared_with)}" if shared_with else "independent"
-            products_info.append(f"{product.name} ({shared_info}): ${product_data['share']:.2f}")
-        
-        summary_data.append({
-            'Member': member.name,
-            'Products': '\n'.join(products_info),
-            'Total Paid': data['paid'],
-            'Total Owed': data['owes'],
-            'Net Balance': data['net']
-        })
-    
-    summary_df = pd.DataFrame(summary_data)
-    
-    # Create settlement DataFrame
-    settlement_data = []
-    for transaction in settlement:
-        settlement_data.append({
-            'From': transaction['from_member'].name,
-            'To': transaction['to_member'].name,
-            'Amount': transaction['amount']
-        })
-    
-    settlement_df = pd.DataFrame(settlement_data)
-    
-    # Create a buffer to store the Excel file
-    buffer = io.BytesIO()
-    
-    # Create an Excel writer
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        # Write the bill information to a sheet
-        bill_info = pd.DataFrame([
-            {'Info': 'Bill', 'Value': bill.title},
-            {'Info': 'Date', 'Value': bill.date},
-            {'Info': 'Group', 'Value': bill.group.name},
-            {'Info': 'Total Amount', 'Value': bill.get_total_amount()}
-        ])
-        bill_info.to_excel(writer, sheet_name='Bill Info', index=False)
-        
-        # Write the member summary to a sheet
-        summary_df.to_excel(writer, sheet_name='Member Summary', index=False)
-        
-        # Write the settlement summary to a sheet
-        settlement_df.to_excel(writer, sheet_name='Settlement', index=False)
-        
-        # Write the products to a sheet
-        products_data = []
-        for product in bill.products:
-            members_involved = [pm.member.name for pm in product.members_involved]
-            products_data.append({
-                'Product': product.name,
-                'Price': product.price,
-                'Paid By': product.payer.name,
-                'Members Involved': ', '.join(members_involved)
-            })
-        
-        products_df = pd.DataFrame(products_data)
-        products_df.to_excel(writer, sheet_name='Products', index=False)
-    
-    # Set the buffer position to the beginning
-    buffer.seek(0)
-    
-    # Create a response with the Excel file)
-    return send_file(
-        buffer,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name=f"{bill.title.replace(' ', '_')}_summary.xlsx"
-    )
+# @app.route('/bill/<int:bill_id>/export/excel')
+# @login_required
+# def export_bill_excel(bill_id):
+#     bill = Bill.query.get_or_404(bill_id)
+#     if bill.group.user_id != current_user.id:
+#         flash('You do not have permission to export this bill.', 'danger')
+#         return redirect(url_for('dashboard'))
+#     
+#     # Create a DataFrame for the bill summary
+#     member_summary = bill.get_member_summary()
+#     settlement = bill.get_settlement_summary()
+#     
+#     # Create member summary DataFrame
+#     summary_data = []
+#     for member_id, data in member_summary.items():
+#         member = data['member']
+#         products_info = []
+#         for product_data in data['products']:
+#             product = product_data['product']
+#             shared_with = [Member.query.get(m_id).name for m_id in product_data['shared_with']]
+#             shared_info = f"shared with {', '.join(shared_with)}" if shared_with else "independent"
+#             products_info.append(f"{product.name} ({shared_info}): ${product_data['share']:.2f}")
+#         
+#         summary_data.append({
+#             'Member': member.name,
+#             'Products': '\n'.join(products_info),
+#             'Total Paid': data['paid'],
+#             'Total Owed': data['owes'],
+#             'Net Balance': data['net']
+#         })
+#     
+#     summary_df = pd.DataFrame(summary_data)
+#     
+#     # Create settlement DataFrame
+#     settlement_data = []
+#     for transaction in settlement:
+#         settlement_data.append({
+#             'From': transaction['from_member'].name,
+#             'To': transaction['to_member'].name,
+#             'Amount': transaction['amount']
+#         })
+#     
+#     settlement_df = pd.DataFrame(settlement_data)
+#     
+#     # Create a buffer to store the Excel file
+#     buffer = io.BytesIO()
+#     
+#     # Create an Excel writer
+#     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+#         # Write the bill information to a sheet
+#         bill_info = pd.DataFrame([
+#             {'Info': 'Bill', 'Value': bill.title},
+#             {'Info': 'Date', 'Value': bill.date},
+#             {'Info': 'Group', 'Value': bill.group.name},
+#             {'Info': 'Total Amount', 'Value': bill.get_total_amount()}
+#         ])
+#         bill_info.to_excel(writer, sheet_name='Bill Info', index=False)
+#         
+#         # Write the member summary to a sheet
+#         summary_df.to_excel(writer, sheet_name='Member Summary', index=False)
+#         
+#         # Write the settlement summary to a sheet
+#         settlement_df.to_excel(writer, sheet_name='Settlement', index=False)
+#         
+#         # Write the products to a sheet
+#         products_data = []
+#         for product in bill.products:
+#             members_involved = [pm.member.name for pm in product.members_involved]
+#             products_data.append({
+#                 'Product': product.name,
+#                 'Price': product.price,
+#                 'Paid By': product.payer.name,
+#                 'Members Involved': ', '.join(members_involved)
+#             })
+#         
+#         products_df = pd.DataFrame(products_data)
+#         products_df.to_excel(writer, sheet_name='Products', index=False)
+#     
+#     # Set the buffer position to the beginning
+#     buffer.seek(0)
+#     
+#     # Create a response with the Excel file)
+#     return send_file(
+#         buffer,
+#         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+#         as_attachment=True,
+#         download_name=f"{bill.title.replace(' ', '_')}_summary.xlsx"
+#     )
 
 # Static pages
 @app.route('/about')
