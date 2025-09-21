@@ -497,10 +497,27 @@ def export_bill_excel(bill_id):
     # Set the buffer position to the beginning
     buffer.seek(0)
     
-    # Create a response with the Excel file
+    # Create a response with the Excel file)
     return send_file(
         buffer,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         as_attachment=True,
         download_name=f"{bill.title.replace(' ', '_')}_summary.xlsx"
     )
+
+# Static pages
+@app.route('/about')
+def about():
+    return render_template('about.html', title='About Us')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html', title='Privacy Policy')
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html', title='Terms of Service')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html', title='Contact Us')

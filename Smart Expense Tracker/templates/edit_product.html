@@ -22,6 +22,7 @@
                 </div>
                 <div class="card-body">
                     <form method="post" action="{{ url_for('edit_product', product_id=product.id) }}" id="productForm">
+                        {{ form.hidden_tag() }}
                         <div class="mb-3">
                             <label for="name" class="form-label">Product Name</label>
                             <input type="text" class="form-control" id="name" name="name" value="{{ product.name }}" required>
@@ -38,7 +39,20 @@
                         </div>
                         
                         <div class="mb-4">
-                            <label class="form-label">Shared By</label>
+                            <label class="form-label">Paid By</label>
+                            <select class="form-select" name="payer" required>
+                                <option value="">Select Payer</option>
+                                {% for member in product.bill.group.members %}
+                                <option value="{{ member.id }}" {% if member.id == product.payer_id %}selected{% endif %}>
+                                    {{ member.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a payer.</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Members Involved</label>
                             <div class="card">
                                 <div class="card-header bg-light py-2">
                                     <div class="form-check">
@@ -53,8 +67,8 @@
                                         {% for member in product.bill.group.members %}
                                         <div class="col-md-6 mb-2">
                                             <div class="form-check">
-                                                <input class="form-check-input member-checkbox" type="checkbox" name="shared_by" value="{{ member.id }}" id="member{{ member.id }}" 
-                                                {% if member in product.shared_by %}checked{% endif %}>
+                                                <input class="form-check-input member-checkbox" type="checkbox" name="members_involved" value="{{ member.id }}" id="member{{ member.id }}" 
+                                                {% if member in product.members_involved %}checked{% endif %}>
                                                 <label class="form-check-label" for="member{{ member.id }}">
                                                     {{ member.name }}
                                                 </label>
@@ -119,7 +133,11 @@
             const memberCheckboxes = document.querySelectorAll('.member-checkbox:checked');
             if (memberCheckboxes.length === 0) {
                 event.preventDefault();
-                document.querySelector('.invalid-feedback').style.display = 'block';
+                event.stopPropagation();
+                const invalidFeedback = document.querySelector('.invalid-feedback');
+                if (invalidFeedback) {
+                    invalidFeedback.style.display = 'block';
+                }
             }
             
             form.classList.add('was-validated');
