@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Product - Smart Expense Splitter{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('group_detail', group_id=bill.group.id) }}">{{ bill.group.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('bill_detail', bill_id=bill.id) }}">{{ bill.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add Product</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h1 class="h5 mb-0">Add Product to {{ bill.title }}</h1>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('new_product', bill_id=bill.id) }}" id="productForm">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Product Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="invalid-feedback">Please provide a product name.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="price" name="price" step="0.01" min="0.01" required>
+                                <div class="invalid-feedback">Please provide a valid price (greater than 0).</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="payer" class="form-label">Paid By</label>
+                            <select class="form-select" id="payer" name="payer" required>
+                                <option value="" selected disabled>Select who paid</option>
+                                {% for member_id, member_name in form.payer.choices %}
+                                <option value="{{ member_id }}">{{ member_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select who paid for this product.</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Shared By</label>
+                            <div class="card">
+                                <div class="card-header bg-light py-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAllMembers">
+                                        <label class="form-check-label" for="selectAllMembers">
+                                            Select All Members
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for member in bill.group.members %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input member-checkbox" type="checkbox" name="members_involved" value="{{ member.id }}" id="member{{ member.id }}">
+                                                <label class="form-check-label" for="member{{ member.id }}">
+                                                    {{ member.name }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="invalid-feedback">Please select at least one member.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('bill_detail', bill_id=bill.id) }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 mb-0">About Products</h2>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Products represent individual items or expenses that are part of a bill.</p>
+                    
+                    <h3 class="h6 mb-2">How to add a product:</h3>
+                    <ol class="mb-3">
+                        <li>Enter the product name</li>
+                        <li>Specify the price</li>
+                        <li>Select which members shared this expense</li>
+                    </ol>
+                    
+                    <h3 class="h6 mb-2">Expense Splitting:</h3>
+                    <p class="mb-0">The cost of each product will be split equally among all selected members. For example, if a $30 product is shared by 3 members, each member will owe $10.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const form = document.getElementById('productForm');
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // Check if at least one member is selected
+            const memberCheckboxes = document.querySelectorAll('.member-checkbox:checked');
+            if (memberCheckboxes.length === 0) {
+                event.preventDefault();
+                document.querySelector('.invalid-feedback').style.display = 'block';
+            }
+            
+            form.classList.add('was-validated');
+        });
+        
+        // Select all members checkbox
+        const selectAllCheckbox = document.getElementById('selectAllMembers');
+        const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            memberCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+        
+        // Update select all checkbox state when individual checkboxes change
+        memberCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const allChecked = Array.from(memberCheckboxes).every(cb => cb.checked);
+                const someChecked = Array.from(memberCheckboxes).some(cb => cb.checked);
+                
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            });
+        });
+    });
+</script>
+{% endblock %}

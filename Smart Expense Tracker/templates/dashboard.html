@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Smart Expense Splitter{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Dashboard</h1>
+        <a href="{{ url_for('new_group') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Group
+        </a>
+    </div>
+
+    <!-- Groups Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h2 class="h5 mb-0">Your Expense Groups</h2>
+        </div>
+        <div class="card-body p-0">
+            {% if groups %}
+            <div class="row g-0">
+                {% for group in groups %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="dashboard-group-card p-4 h-100">
+                        <div class="d-flex justify-content-between">
+                            <h3 class="h5 mb-3">{{ group.name }}</h3>
+                            <span class="badge bg-light text-dark">{{ group.members|length }} members</span>
+                        </div>
+                        <p class="text-muted small mb-3">{{ group.description }}</p>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <p class="small mb-1"><i class="far fa-calendar-alt me-2"></i>Created {{ group.created_at.strftime('%b %d, %Y') }}</p>
+                                <p class="small mb-0"><i class="fas fa-receipt me-2"></i>{{ group.bills|length }} bills</p>
+                            </div>
+                            <a href="{{ url_for('group_detail', group_id=group.id) }}" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-users fa-3x text-muted"></i>
+                </div>
+                <h3 class="h5 mb-3">No Groups Yet</h3>
+                <p class="text-muted mb-4">Create your first expense group to start tracking shared expenses</p>
+                <a href="{{ url_for('new_group') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create New Group
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h2 class="h5 mb-0">Recent Activity</h2>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_activity %}
+            <div class="list-group list-group-flush">
+                {% for activity in recent_activity %}
+                <div class="list-group-item py-3">
+                    <div class="d-flex">
+                        <div class="activity-icon me-3">
+                            {% if activity.type == 'bill_added' %}
+                            <i class="fas fa-receipt text-success"></i>
+                            {% elif activity.type == 'member_added' %}
+                            <i class="fas fa-user-plus text-primary"></i>
+                            {% elif activity.type == 'group_created' %}
+                            <i class="fas fa-users text-info"></i>
+                            {% elif activity.type == 'product_added' %}
+                            <i class="fas fa-shopping-cart text-warning"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="mb-1">{{ activity.description }}</p>
+                            <p class="small text-muted mb-0">
+                                <i class="far fa-clock me-1"></i>{{ activity.timestamp.strftime('%b %d, %Y at %I:%M %p') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="far fa-clock fa-3x text-muted"></i>
+                </div>
+                <h3 class="h5 mb-3">No Recent Activity</h3>
+                <p class="text-muted">Your recent actions will appear here</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

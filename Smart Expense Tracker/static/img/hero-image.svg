@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <!-- Background -->
+  <rect width="600" height="400" fill="#f8f9fa" rx="10" ry="10"/>
+  
+  <!-- Receipt/Bill -->
+  <rect x="150" y="80" width="300" height="240" fill="white" stroke="#6c757d" stroke-width="2" rx="5" ry="5"/>
+  
+  <!-- Receipt Header -->
+  <rect x="150" y="80" width="300" height="40" fill="#e9ecef" rx="5" ry="5"/>
+  <text x="300" y="105" font-family="Arial" font-size="16" fill="#495057" text-anchor="middle">EXPENSE RECEIPT</text>
+  
+  <!-- Receipt Lines -->
+  <line x1="170" y1="140" x2="430" y2="140" stroke="#dee2e6" stroke-width="1"/>
+  <line x1="170" y1="180" x2="430" y2="180" stroke="#dee2e6" stroke-width="1"/>
+  <line x1="170" y1="220" x2="430" y2="220" stroke="#dee2e6" stroke-width="1"/>
+  <line x1="170" y1="260" x2="430" y2="260" stroke="#dee2e6" stroke-width="1"/>
+  
+  <!-- Item Texts -->
+  <text x="190" y="165" font-family="Arial" font-size="14" fill="#212529">Groceries</text>
+  <text x="190" y="205" font-family="Arial" font-size="14" fill="#212529">Dinner</text>
+  <text x="190" y="245" font-family="Arial" font-size="14" fill="#212529">Movie tickets</text>
+  
+  <!-- Prices -->
+  <text x="410" y="165" font-family="Arial" font-size="14" fill="#212529" text-anchor="end">$45.50</text>
+  <text x="410" y="205" font-family="Arial" font-size="14" fill="#212529" text-anchor="end">$78.25</text>
+  <text x="410" y="245" font-family="Arial" font-size="14" fill="#212529" text-anchor="end">$36.00</text>
+  
+  <!-- Total Line -->
+  <line x1="170" y1="280" x2="430" y2="280" stroke="#495057" stroke-width="2"/>
+  <text x="190" y="300" font-family="Arial" font-size="16" font-weight="bold" fill="#212529">Total</text>
+  <text x="410" y="300" font-family="Arial" font-size="16" font-weight="bold" fill="#212529" text-anchor="end">$159.75</text>
+  
+  <!-- People Icons -->
+  <circle cx="100" cy="150" r="30" fill="#4dabf7"/>
+  <circle cx="500" cy="150" r="30" fill="#4dabf7"/>
+  <circle cx="100" cy="250" r="30" fill="#4dabf7"/>
+  <circle cx="500" cy="250" r="30" fill="#4dabf7"/>
+  
+  <!-- Person Silhouettes -->
+  <circle cx="100" cy="135" r="10" fill="white"/>
+  <path d="M80,180 Q100,160 120,180" stroke="white" stroke-width="4" fill="none"/>
+  <rect x="90" y="145" width="20" height="25" fill="#4dabf7" rx="5" ry="5"/>
+  
+  <circle cx="500" cy="135" r="10" fill="white"/>
+  <path d="M480,180 Q500,160 520,180" stroke="white" stroke-width="4" fill="none"/>
+  <rect x="490" y="145" width="20" height="25" fill="#4dabf7" rx="5" ry="5"/>
+  
+  <circle cx="100" cy="235" r="10" fill="white"/>
+  <path d="M80,280 Q100,260 120,280" stroke="white" stroke-width="4" fill="none"/>
+  <rect x="90" y="245" width="20" height="25" fill="#4dabf7" rx="5" ry="5"/>
+  
+  <circle cx="500" cy="235" r="10" fill="white"/>
+  <path d="M480,280 Q500,260 520,280" stroke="white" stroke-width="4" fill="none"/>
+  <rect x="490" y="245" width="20" height="25" fill="#4dabf7" rx="5" ry="5"/>
+  
+  <!-- Connection Lines -->
+  <line x1="130" y1="150" x2="150" y2="150" stroke="#6c757d" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="450" y1="150" x2="470" y2="150" stroke="#6c757d" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="130" y1="250" x2="150" y2="250" stroke="#6c757d" stroke-width="2" stroke-dasharray="5,5"/>
+  <line x1="450" y1="250" x2="470" y2="250" stroke="#6c757d" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- App Logo -->
+  <circle cx="300" cy="40" r="25" fill="#4c6ef5"/>
+  <text x="300" y="48" font-family="Arial" font-size="24" font-weight="bold" fill="white" text-anchor="middle">$</text>
+</svg>

@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+
+{% block title %}Smart Expense Splitter - Split Bills Easily{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1>Split Expenses Effortlessly</h1>
+                <p class="lead">Smart Expense Splitter makes it easy to track shared expenses, split bills fairly, and settle up with friends, roommates, or travel companions.</p>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg me-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-2">
+                    <i class="fas fa-user-plus me-2"></i>Sign Up Free
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                {% endif %}
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="{{ url_for('static', filename='img/hero-image.svg') }}" alt="Smart Expense Splitter" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h1 mb-3">How It Works</h2>
+            <p class="lead text-muted">Split expenses in three simple steps</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-users fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h4 mb-3">1. Create a Group</h3>
+                        <p class="text-muted mb-0">Add the people you're sharing expenses with to a group. Create as many groups as you need for different situations.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-receipt fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h4 mb-3">2. Add Bills & Products</h3>
+                        <p class="text-muted mb-0">Enter your shared expenses and specify which members shared each product. The app tracks who paid for what.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 text-center">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-chart-pie fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h4 mb-3">3. See Who Owes What</h3>
+                        <p class="text-muted mb-0">Get a clear breakdown of expenses and see exactly who owes what to whom. Export reports for easy sharing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h1 mb-3">Key Features</h2>
+            <p class="lead text-muted">Everything you need to manage shared expenses</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-calculator text-primary fa-2x"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Fair Splitting</h3>
+                        </div>
+                        <p class="text-muted mb-0">Split expenses equally or by custom amounts. Specify exactly who shared what.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-exchange-alt text-primary fa-2x"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Simplified Settlements</h3>
+                        </div>
+                        <p class="text-muted mb-0">See the minimum number of transactions needed to settle up with everyone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-file-export text-primary fa-2x"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Export Options</h3>
+                        </div>
+                        <p class="text-muted mb-0">Export expense reports as CSV or Excel files to share with your group.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-mobile-alt text-primary fa-2x"></i>
+                            </div>
+                            <h3 class="h5 mb-0">Mobile Friendly</h3>
+                        </div>
+                        <p class="text-muted mb-0">Access your expense groups and bills from any device with a responsive design.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="card border-0 bg-primary text-white shadow">
+            <div class="card-body p-5 text-center">
+                <h2 class="mb-3">Ready to start splitting expenses?</h2>
+                <p class="lead mb-4">Join thousands of users who are already saving time and avoiding awkward money conversations.</p>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+                {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Sign Up Free
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

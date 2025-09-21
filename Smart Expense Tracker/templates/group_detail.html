@@ -1,0 +1,219 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ group.name }} - Smart Expense Splitter{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ group.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Group Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="mb-2">{{ group.name }}</h1>
+            <p class="text-muted mb-0">{{ group.description }}</p>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="groupActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cog me-2"></i>Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="groupActionsDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('edit_group', group_id=group.id) }}"><i class="fas fa-edit me-2"></i>Edit Group</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('new_bill', group_id=group.id) }}"><i class="fas fa-receipt me-2"></i>Add Bill</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('new_member', group_id=group.id) }}"><i class="fas fa-user-plus me-2"></i>Add Member</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteGroupModal"><i class="fas fa-trash-alt me-2"></i>Delete Group</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Members Section -->
+        <div class="col-lg-4 mb-4 mb-lg-0">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">Members</h2>
+                    <a href="{{ url_for('new_member', group_id=group.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if group.members %}
+                    <div class="list-group list-group-flush">
+                        {% for member in group.members %}
+                        <div class="list-group-item py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3 class="h6 mb-1">{{ member.name }}</h3>
+                                    <p class="small text-muted mb-0">{{ member.email }}</p>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-muted dropdown-toggle" type="button" id="memberActions{{ member.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="memberActions{{ member.id }}">
+                                        <li><a class="dropdown-item" href="{{ url_for('edit_member', member_id=member.id) }}"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteMemberModal{{ member.id }}"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Member Modal -->
+                        <div class="modal fade" id="deleteMemberModal{{ member.id }}" tabindex="-1" aria-labelledby="deleteMemberModalLabel{{ member.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteMemberModalLabel{{ member.id }}">Delete Member</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete <strong>{{ member.name }}</strong> from this group?</p>
+                                        <p class="text-danger"><small>This action cannot be undone. All expense data associated with this member will be lost.</small></p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{{ url_for('delete_member', member_id=member.id) }}" method="post">
+                                            <button type="submit" class="btn btn-danger">Delete Member</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-users fa-3x text-muted"></i>
+                        </div>
+                        <h3 class="h6 mb-3">No Members Yet</h3>
+                        <p class="text-muted mb-3">Add members to start tracking shared expenses</p>
+                        <a href="{{ url_for('new_member', group_id=group.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-user-plus me-2"></i>Add Member
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bills Section -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">Bills</h2>
+                    <a href="{{ url_for('new_bill', group_id=group.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Bill
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if group.bills %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Products</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bill in group.bills %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('bill_detail', bill_id=bill.id) }}" class="text-decoration-none text-dark">
+                                            {{ bill.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ bill.date.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ bill.products|length }}</td>
+                                    <td class="text-end">${{ "%.2f"|format(bill.get_total_amount()) }}</td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-link text-muted dropdown-toggle" type="button" id="billActions{{ bill.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="billActions{{ bill.id }}">
+                                                <li><a class="dropdown-item" href="{{ url_for('bill_detail', bill_id=bill.id) }}"><i class="fas fa-eye me-2"></i>View</a></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('edit_bill', bill_id=bill.id) }}"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                                <li><a class="dropdown-item" href="{{ url_for('new_product', bill_id=bill.id) }}"><i class="fas fa-plus me-2"></i>Add Product</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteBillModal{{ bill.id }}"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Delete Bill Modal -->
+                                <div class="modal fade" id="deleteBillModal{{ bill.id }}" tabindex="-1" aria-labelledby="deleteBillModalLabel{{ bill.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteBillModalLabel{{ bill.id }}">Delete Bill</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete the bill <strong>{{ bill.title }}</strong>?</p>
+                                                <p class="text-danger"><small>This action cannot be undone. All products and expense data associated with this bill will be lost.</small></p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('delete_bill', bill_id=bill.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete Bill</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-receipt fa-3x text-muted"></i>
+                        </div>
+                        <h3 class="h6 mb-3">No Bills Yet</h3>
+                        <p class="text-muted mb-3">Add bills to start tracking expenses</p>
+                        <a href="{{ url_for('new_bill', group_id=group.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Add Bill
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Group Modal -->
+<div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-labelledby="deleteGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteGroupModalLabel">Delete Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the group <strong>{{ group.name }}</strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone. All members, bills, products, and expense data associated with this group will be permanently deleted.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('delete_group', group_id=group.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger">Delete Group</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

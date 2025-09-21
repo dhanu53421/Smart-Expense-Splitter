@@ -1,0 +1,394 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ bill.title }} - Smart Expense Splitter{% endblock %}
+
+{% block scripts %}
+<script>
+    // Toggle transaction details visibility
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.transaction-details-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const detailsDiv = this.nextElementSibling;
+                if (detailsDiv.style.display === 'none') {
+                    detailsDiv.style.display = 'block';
+                    this.innerHTML = '<small><i class="fas fa-minus-circle me-1"></i>Hide details</small>';
+                } else {
+                    detailsDiv.style.display = 'none';
+                    this.innerHTML = '<small><i class="fas fa-info-circle me-1"></i>View details</small>';
+                }
+            });
+        });
+        
+        // Member details modal functionality
+        document.querySelectorAll('.member-details-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const memberId = this.getAttribute('data-member-id');
+                const memberSummary = {{ js_member_summary|tojson }};
+                const memberData = memberSummary[memberId];
+                
+                // Set modal title
+                document.getElementById('memberDetailsTitle').textContent = 
+                    `Expense Details for ${memberData.member.name}`;
+                
+                // Populate paid products
+                const paidProductsList = document.getElementById('paidProductsList');
+                paidProductsList.innerHTML = '';
+                
+                if (memberData.paid_products && memberData.paid_products.length > 0) {
+                    memberData.paid_products.forEach(product => {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item';
+                        item.setAttribute('role', 'listitem');
+                        item.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${product.name}</h6>
+                                <span class="text-success" aria-label="Price: $${product.price.toFixed(2)}">$${product.price.toFixed(2)}</span>
+                            </div>
+                            <p class="mb-1">Shared with ${product.members_count} members</p>
+                        `;
+                        paidProductsList.appendChild(item);
+                    });
+                } else {
+                    paidProductsList.innerHTML = '<div class="list-group-item" role="listitem" aria-label="No products paid by this member">No products paid by this member</div>';
+                }
+                
+                // Populate shared products
+                const sharedProductsList = document.getElementById('sharedProductsList');
+                sharedProductsList.innerHTML = '';
+                
+                if (memberData.shared_products && memberData.shared_products.length > 0) {
+                    memberData.shared_products.forEach(product => {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item';
+                        item.setAttribute('role', 'listitem');
+                        item.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">${product.name}</h6>
+                                <span aria-label="Your share: $${(product.price / product.members_count).toFixed(2)}">Share: $${(product.price / product.members_count).toFixed(2)}</span>
+                            </div>
+                            <p class="mb-1">Paid by ${product.payer_name}</p>
+                            <small aria-label="Total price $${product.price.toFixed(2)} divided by ${product.members_count} members">Total: $${product.price.toFixed(2)} / ${product.members_count} members</small>
+                        `;
+                        sharedProductsList.appendChild(item);
+                    });
+                } else {
+                    sharedProductsList.innerHTML = '<div class="list-group-item" role="listitem" aria-label="No shared products for this member">No shared products for this member</div>';
+                }
+                
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('memberDetailsModal'));
+                modal.show();
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('group_detail', group_id=bill.group.id) }}">{{ bill.group.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ bill.title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Bill Header -->
+    <header class="d-flex justify-content-between align-items-start mb-4" role="banner">
+        <div>
+            <h1 class="mb-2">{{ bill.title }}</h1>
+            <p class="text-muted mb-0" itemprop="description">{{ bill.description }}</p>
+            <p class="text-muted mb-0"><i class="far fa-calendar-alt me-2"></i>{{ bill.date.strftime('%B %d, %Y') }}</p>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="billActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cog me-2"></i>Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="billActionsDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('edit_bill', bill_id=bill.id) }}"><i class="fas fa-edit me-2"></i>Edit Bill</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('new_product', bill_id=bill.id) }}"><i class="fas fa-plus me-2"></i>Add Product</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ url_for('export_bill_csv', bill_id=bill.id) }}"><i class="fas fa-file-csv me-2"></i>Export CSV</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('export_bill_excel', bill_id=bill.id) }}"><i class="fas fa-file-excel me-2"></i>Export Excel</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteBillModal"><i class="fas fa-trash-alt me-2"></i>Delete Bill</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Products Section -->
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">Products</h2>
+                    <a href="{{ url_for('new_product', bill_id=bill.id) }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Product
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if bill.products %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Price</th>
+                                    <th>Shared By</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in bill.products %}
+                                <tr>
+                                    <td>{{ product.name }}</td>
+                                    <td class="text-end">${{ "%.2f"|format(product.price) }}</td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% for product_member in product.members_involved %}
+                                            <span class="badge bg-light text-dark">{{ product_member.member.name }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-link text-muted dropdown-toggle" type="button" id="productActions{{ product.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="productActions{{ product.id }}">
+                                                <li><a class="dropdown-item" href="{{ url_for('edit_product', product_id=product.id) }}"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                                <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.id }}"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Delete Product Modal -->
+                                <div class="modal fade" id="deleteProductModal{{ product.id }}" tabindex="-1" aria-labelledby="deleteProductModalLabel{{ product.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteProductModalLabel{{ product.id }}">Delete Product</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete the product <strong>{{ product.name }}</strong>?</p>
+                                                <p class="text-danger"><small>This action cannot be undone and will affect the expense calculations.</small></p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('delete_product', product_id=product.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete Product</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th>Total</th>
+                                    <th class="text-end">${{ "%.2f"|format(bill.get_total_amount()) }}</th>
+                                    <th colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3" aria-hidden="true">
+                            <i class="fas fa-shopping-cart fa-3x text-muted"></i>
+                        </div>
+                        <h3 class="h6 mb-3">No Products Yet</h3>
+                        <p class="text-muted mb-3" role="status">Add products to this bill to start tracking expenses</p>
+                        <a href="{{ url_for('new_product', bill_id=bill.id) }}" class="btn btn-primary btn-sm" aria-label="Add new product to bill">
+                            <i class="fas fa-plus me-2" aria-hidden="true"></i>Add Product
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Summary Section -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 mb-0">Expense Summary</h2>
+                </div>
+                <div class="card-body">
+                    {% if bill.products %}
+                    <div class="mb-4">
+                        <h3 class="h6 mb-3">Per Member Breakdown</h3>
+                        <div class="table-responsive">
+                            <table class="table table-striped" aria-label="Member expense breakdown">
+                                <caption class="visually-hidden">Per member expense breakdown showing amounts paid, owed, and net balance</caption>
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Member</th>
+                                        <th scope="col">Paid</th>
+                                        <th scope="col">Owes</th>
+                                        <th scope="col">Net</th>
+                                        <th scope="col">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member_id, data in bill.get_member_summary().items() %}
+                                    <tr>
+                                        <td>{{ data.member.name }}</td>
+                                        <td>${{ "%.2f"|format(data.paid) }}</td>
+                                        <td>${{ "%.2f"|format(data.owes) }}</td>
+                                        <td>
+                                            {% if data.net > 0 %}
+                                            <span class="badge bg-success">+${{ "%.2f"|format(data.net) }}</span>
+                                            {% elif data.net < 0 %}
+                                            <span class="badge bg-danger">-${{ "%.2f"|format(abs(data.net)) }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">$0.00</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary member-details-btn" data-member-id="{{ data.member.id }}" aria-label="View details for {{ data.member.name }}">
+                                                <i class="bi bi-info-circle" aria-hidden="true"></i> View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Member Details Modal -->
+                        <div class="modal fade" id="memberDetailsModal" tabindex="-1" aria-labelledby="memberDetailsTitle" aria-hidden="true" role="dialog">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="memberDetailsTitle">Member Expense Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="memberDetailsBody">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 id="paidProductsHeading">Paid Products</h6>
+                                                <div id="paidProductsList" class="list-group mb-3" role="list" aria-labelledby="paidProductsHeading">
+                                                    <!-- Paid products will be populated here -->
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 id="sharedProductsHeading">Shared Products</h6>
+                                                <div id="sharedProductsList" class="list-group" role="list" aria-labelledby="sharedProductsHeading">
+                                                    <!-- Shared products will be populated here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div role="region" aria-label="Settlement Transactions">
+                        <h3 class="h6 mb-3 d-flex justify-content-between align-items-center">
+                            <span>Settlement Transactions</span>
+                            <span class="badge bg-info" aria-live="polite">{{ bill.get_settlement_summary()|length }} transaction(s)</span>
+                        </h3>
+                        {% set transactions = bill.get_settlement_summary() %}
+                        {% if transactions %}
+                        <div class="list-group list-group-flush" role="list">
+                            {% for transaction in transactions %}
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="fw-bold">{{ transaction.from_member.name }}</span>
+                                        <i class="fas fa-arrow-right mx-2"></i>
+                                        <span class="fw-bold">{{ transaction.to_member.name }}</span>
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">${{ "%.2f"|format(transaction.amount) }}</span>
+                                </div>
+                                <button class="btn btn-sm btn-link text-muted p-0 mt-1 transaction-details-toggle" type="button">
+                                    <small><i class="fas fa-info-circle me-1"></i>View details</small>
+                                </button>
+                                <div class="transaction-details mt-2" style="display: none;">
+                                    <div class="card card-body bg-light mb-2">
+                                        <p class="mb-2">{{ transaction.from_member.name }} owes ${{ "%.2f"|format(transaction.amount) }} to {{ transaction.to_member.name }} based on their share of expenses in this bill.</p>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                {% if transaction.shared_products %}
+                                                <h6 class="mb-2">Shared Products</h6>
+                                                <ul class="list-group">
+                                                    {% for product in transaction.shared_products %}
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                                        <span>{{ product.name }}</span>
+                                                        <span class="badge bg-secondary">${{ "%.2f"|format(product.price) }}</span>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info mb-0">
+                            <i class="fas fa-check-circle me-2"></i> All expenses are already balanced. No settlement transactions needed.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">Add products to see expense summary</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Export Options -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 mb-0" id="export-options-heading">Export Options</h2>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2" role="group" aria-labelledby="export-options-heading">
+                        <a href="{{ url_for('export_bill_csv', bill_id=bill.id) }}" class="btn btn-outline-primary" aria-label="Export bill data as CSV file">
+                            <i class="fas fa-file-csv me-2" aria-hidden="true"></i>Export as CSV
+                        </a>
+                        <a href="{{ url_for('export_bill_excel', bill_id=bill.id) }}" class="btn btn-outline-primary" aria-label="Export bill data as Excel file">
+                            <i class="fas fa-file-excel me-2" aria-hidden="true"></i>Export as Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Bill Modal -->
+<div class="modal fade" id="deleteBillModal" tabindex="-1" aria-labelledby="deleteBillModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteBillModalLabel">Delete Bill</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p role="alert">Are you sure you want to delete the bill <strong>{{ bill.title }}</strong>?</p>
+                <p class="text-danger" role="alert"><small>This action cannot be undone. All products and expense data associated with this bill will be permanently deleted.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('delete_bill', bill_id=bill.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger" aria-label="Permanently delete this bill">Delete Bill</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
