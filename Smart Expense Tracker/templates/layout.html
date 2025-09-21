@@ -74,17 +74,50 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer" role="contentinfo">
+    <footer class="footer" role="contentinfo" aria-label="Site footer">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
+                <!-- Copyright Section -->
+                <div class="col-md-6" role="region" aria-labelledby="copyright-heading">
+                    <h2 id="copyright-heading" class="visually-hidden">Copyright Information</h2>
                     <p class="mb-0" itemprop="copyrightNotice">&copy; 2023-2025 Smart Expense Splitter. All rights reserved.</p>
                 </div>
-                <div class="col-md-6 text-md-end footer-links" aria-label="Footer Navigation">
-                    <a href="#" aria-label="About Us">About</a>
-                    <a href="#" aria-label="Privacy Policy">Privacy</a>
-                    <a href="#" aria-label="Terms of Service">Terms</a>
-                    <a href="#" aria-label="Contact Us">Contact</a>
+                
+                <!-- Footer Navigation Section -->
+                <div class="col-md-6 text-md-end" role="region" aria-labelledby="footer-nav-heading">
+                    <h2 id="footer-nav-heading" class="visually-hidden">Footer Navigation</h2>
+                    <nav class="footer-links" aria-label="Legal and company information">
+                        <ul class="list-inline mb-0" role="list">
+                            <li class="list-inline-item" role="listitem">
+                                <a href="{{ url_for('about') }}" aria-label="Learn more about Smart Expense Splitter company and mission" 
+                                   class="text-decoration-none" rel="noopener noreferrer">About</a>
+                            </li>
+                            <li class="list-inline-item" role="listitem">
+                                <a href="{{ url_for('privacy') }}" aria-label="Read our privacy policy and data protection practices" 
+                                   class="text-decoration-none" rel="noopener noreferrer">Privacy</a>
+                            </li>
+                            <li class="list-inline-item" role="listitem">
+                                <a href="{{ url_for('terms') }}" aria-label="Review our terms of service and usage agreements" 
+                                   class="text-decoration-none" rel="noopener noreferrer">Terms</a>
+                            </li>
+                            <li class="list-inline-item" role="listitem">
+                                <a href="{{ url_for('contact') }}" aria-label="Contact Smart Expense Splitter support team" 
+                                   class="text-decoration-none" rel="noopener noreferrer">Contact</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Additional Footer Information -->
+            <div class="row mt-3" role="region" aria-labelledby="footer-info-heading">
+                <h2 id="footer-info-heading" class="visually-hidden">Additional Footer Information</h2>
+                <div class="col-12">
+                    <div class="footer-info text-center text-md-start" aria-label="Application version and technical information">
+                        <small class="text-muted" itemprop="version" aria-label="Application version 1.0.0">
+                            Version 1.0.0 | Built with Flask & Bootstrap
+                        </small>
+                    </div>
                 </div>
             </div>
         </div>
