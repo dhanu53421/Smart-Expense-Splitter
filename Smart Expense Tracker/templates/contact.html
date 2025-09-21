@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <h1 class="mb-4">Contact Us</h1>
+                    <p class="lead mb-5">We'd love to hear from you! Whether you have a question about our service, need help with your account, or just want to share feedback, our team is here to help.</p>
+
+                    <div class="row mb-5">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <i class="fas fa-envelope fa-2x text-primary"></i>
+                                    </div>
+                                    <h3 class="h5 mb-3">Email Support</h3>
+                                    <p class="mb-3">Get help with your account, technical issues, or general questions.</p>
+                                    <a href="mailto:support@smartexpensesplitter.com" class="btn btn-outline-primary">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Email
+                                    </a>
+                                    <p class="small text-muted mt-3">support@smartexpensesplitter.com</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <i class="fas fa-phone fa-2x text-primary"></i>
+                                    </div>
+                                    <h3 class="h5 mb-3">Phone Support</h3>
+                                    <p class="mb-3">Speak with our support team for urgent issues or complex questions.</p>
+                                    <a href="tel:+15551234567" class="btn btn-outline-primary">
+                                        <i class="fas fa-phone me-2"></i>Call Now
+                                    </a>
+                                    <p class="small text-muted mt-3">+1 (555) 123-4567</p>
+                                    <p class="small text-muted">Mon-Fri, 9 AM - 6 PM EST</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-5">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <i class="fas fa-comments fa-2x text-primary"></i>
+                                    </div>
+                                    <h3 class="h5 mb-3">Live Chat</h3>
+                                    <p class="mb-3">Get instant help through our live chat support system.</p>
+                                    <button class="btn btn-outline-primary" onclick="openChat()">
+                                        <i class="fas fa-comment-dots me-2"></i>Start Chat
+                                    </button>
+                                    <p class="small text-muted mt-3">Available during business hours</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body text-center p-4">
+                                    <div class="mb-3">
+                                        <i class="fas fa-question-circle fa-2x text-primary"></i>
+                                    </div>
+                                    <h3 class="h5 mb-3">Help Center</h3>
+                                    <p class="mb-3">Browse our comprehensive help articles and FAQs.</p>
+                                    <a href="#help-center" class="btn btn-outline-primary">
+                                        <i class="fas fa-book me-2"></i>View Help
+                                    </a>
+                                    <p class="small text-muted mt-3">24/7 self-service support</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card border-0 bg-primary text-white mb-5">
+                        <div class="card-body p-4">
+                            <h3 class="h5 mb-3">Office Address</h3>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p class="mb-2"><i class="fas fa-map-marker-alt me-2"></i><strong>Smart Expense Splitter Headquarters</strong></p>
+                                    <p class="mb-2">123 Expense Lane, Suite 100</p>
+                                    <p class="mb-2">Financial District</p>
+                                    <p class="mb-0">New York, NY 10001</p>
+                                </div>
+                                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                                    <a href="https://maps.google.com/?q=123+Expense+Lane,New+York,NY" target="_blank" class="btn btn-light">
+                                        <i class="fas fa-directions me-2"></i>Get Directions
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h3 class="h4 mb-4">Send Us a Message</h3>
+                        <form id="contactForm" class="needs-validation" novalidate>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">First Name *</label>
+                                    <input type="text" class="form-control" id="firstName" required>
+                                    <div class="invalid-feedback">Please provide your first name.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">Last Name *</label>
+                                    <input type="text" class="form-control" id="lastName" required>
+                                    <div class="invalid-feedback">Please provide your last name.</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email Address *</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                    <div class="invalid-feedback">Please provide a valid email address.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <select class="form-select" id="subject" required>
+                                    <option value="">Choose a topic...</option>
+                                    <option value="general">General Question</option>
+                                    <option value="technical">Technical Support</option>
+                                    <option value="billing">Billing Question</option>
+                                    <option value="feature">Feature Request</option>
+                                    <option value="bug">Bug Report</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a subject.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message *</label>
+                                <textarea class="form-control" id="message" rows="5" required placeholder="Please describe your question or issue in detail..."></textarea>
+                                <div class="invalid-feedback">Please provide a message.</div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="newsletter">
+                                    <label class="form-check-label" for="newsletter">
+                                        I would like to receive updates and news about Smart Expense Splitter
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="row mb-5">
+                        <div class="col-12">
+                            <h3 class="h4 mb-4">Frequently Asked Questions</h3>
+                            <div class="accordion" id="faqAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading1">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                            How do I reset my password?
+                                        </button>
+                                    </h2>
+                                    <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            To reset your password, click on the "Forgot Password?" link on the login page. Enter your email address and we'll send you instructions to reset your password.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading2">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                            How do I delete my account?
+                                        </button>
+                                    </h2>
+                                    <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-collapse">
+                                            <div class="accordion-body">
+                                                To delete your account, please contact our support team at support@smartexpensesplitter.com. We'll process your request within 30 days and permanently delete all your personal data.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading3">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                            Is my financial data secure?
+                                        </button>
+                                    </h2>
+                                    <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Yes, we use industry-standard encryption and security measures to protect your data. All sensitive information is encrypted both in transit and at rest. We never store your actual financial account numbers or passwords.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading4">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                                            Can I export my data?
+                                        </button>
+                                    </h2>
+                                    <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                        <div class="accordion-body">
+                                            Yes! You can export your expense data to CSV or Excel formats directly from the bill detail page. This feature allows you to keep backups or use the data in other applications.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center bg-light p-4 rounded">
+                        <h3 class="h5 mb-3">Still need help?</h3>
+                        <p class="mb-3">Our support team is ready to assist you with any questions or concerns.</p>
+                        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+                            <a href="mailto:support@smartexpensesplitter.com" class="btn btn-primary">
+                                <i class="fas fa-envelope me-2"></i>Email Support
+                            </a>
+                            <a href="tel:+15551234567" class="btn btn-outline-primary">
+                                <i class="fas fa-phone me-2"></i>Call Us
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    event.preventDefault();
+                    // Here you would typically send the form data to your server
+                    alert('Thank you for your message! We will get back to you soon.');
+                    form.reset();
+                    form.classList.remove('was-validated');
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Chat function (placeholder)
+function openChat() {
+    alert('Live chat will be available during business hours (Mon-Fri, 9 AM - 6 PM EST). Please email us or call us outside these hours.');
+}
+</script>
+{% endblock %}

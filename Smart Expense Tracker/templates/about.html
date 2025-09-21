@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <h1 class="mb-4">About Smart Expense Splitter</h1>
+                    
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3">Our Mission</h2>
+                        <p class="lead">We believe that splitting expenses should be simple, fair, and stress-free. Our mission is to eliminate the awkward conversations about money and make expense sharing effortless for everyone.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3">What We Do</h2>
+                        <p>Smart Expense Splitter is a comprehensive expense management platform designed to help groups of friends, families, roommates, and colleagues track and split expenses fairly. Whether you're planning a group trip, sharing household expenses, or organizing a team lunch, our intelligent algorithms ensure everyone pays their fair share.</p>
+                        
+                        <h3 class="h5 mt-4 mb-3">Key Features:</h3>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Smart expense splitting with multiple calculation methods</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Real-time expense tracking and member balances</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Export to CSV and Excel formats</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Mobile-friendly responsive design</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Secure data storage and user authentication</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Intuitive interface for all user levels</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3">Our Story</h2>
+                        <p>Smart Expense Splitter was born from a common problem: the frustration of manually calculating who owes what in group expenses. We noticed that existing solutions were either too complex, too expensive, or lacked the intelligent features needed for fair expense distribution.</p>
+                        
+                        <p>Our team set out to create a solution that combines simplicity with powerful features, making expense management accessible to everyone while maintaining the flexibility needed for complex scenarios.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3">Our Values</h2>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h4 class="h6 text-primary">Simplicity</h4>
+                                <p class="small">We believe powerful tools should be easy to use, with intuitive interfaces that don't require a learning curve.</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h4 class="h6 text-primary">Fairness</h4>
+                                <p class="small">Our algorithms ensure expenses are split fairly, taking into account who paid for what and who benefited.</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h4 class="h6 text-primary">Transparency</h4>
+                                <p class="small">We provide clear breakdowns and detailed explanations of how expenses are calculated.</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h4 class="h6 text-primary">Privacy</h4>
+                                <p class="small">We protect your data with industry-standard security measures and never share your information.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-4 rounded">
+                        <h3 class="h5 mb-3">Ready to simplify your expense management?</h3>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Get Started Free
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
