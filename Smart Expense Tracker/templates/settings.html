@@ -149,15 +149,32 @@
 
 <script>
 function toggleDarkMode() {
-    const body = document.body;
+    const html = document.documentElement;
     const isDarkMode = document.getElementById('darkModeSwitch').checked;
     
     if (isDarkMode) {
-        body.classList.add('dark-mode');
-        localStorage.setItem('darkMode', 'enabled');
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
     } else {
-        body.classList.remove('dark-mode');
-        localStorage.setItem('darkMode', 'disabled');
+        html.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+    }
+    
+    // Update navbar toggle button
+    updateNavbarDarkModeToggle();
+}
+
+function updateNavbarDarkModeToggle() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    
+    if (darkModeToggle) {
+        if (currentTheme === 'dark') {
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
     }
 }
 
@@ -185,7 +202,9 @@ function resetSettings() {
         document.getElementById('settlementAlerts').checked = false;
         
         localStorage.removeItem('userSettings');
-        localStorage.removeItem('darkMode');
+        localStorage.removeItem('theme');
+        document.documentElement.setAttribute('data-theme', 'light');
+        updateNavbarDarkModeToggle();
         
         alert('Settings reset to defaults!');
     }
@@ -193,10 +212,16 @@ function resetSettings() {
 
 // Load saved settings on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Load theme
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('darkModeSwitch').checked = (savedTheme === 'dark');
+    updateNavbarDarkModeToggle();
+    
+    // Load other settings
     const savedSettings = localStorage.getItem('userSettings');
     if (savedSettings) {
         const settings = JSON.parse(savedSettings);
-        document.getElementById('darkModeSwitch').checked = settings.darkMode;
         document.getElementById('emailNotifications').checked = settings.emailNotifications;
         document.getElementById('billReminders').checked = settings.billReminders;
         document.getElementById('settlementAlerts').checked = settings.settlementAlerts;
