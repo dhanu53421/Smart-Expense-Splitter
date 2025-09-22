@@ -561,7 +561,7 @@ def edit_bill_template(template_id):
     form = BillTemplateForm(obj=template)
     if form.validate_on_submit():
         template.name = form.name.data
-        template.title = form.title.title
+        template.title = form.title.data
         template.description = form.description.data
         template.category = form.category.data
         db.session.commit()
