@@ -61,3 +61,26 @@ class ProductForm(FlaskForm):
     payer = SelectField('Paid By', coerce=int, validators=[DataRequired()])
     members_involved = SelectMultipleField('Members Involved', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Add Product')
+
+class BillTemplateForm(FlaskForm):
+    name = StringField('Template Name', validators=[DataRequired(), Length(max=100)])
+    title = StringField('Bill Title', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=255)])
+    category = SelectField('Category', choices=[
+        ('Food & Dining', 'Food & Dining'),
+        ('Transportation', 'Transportation'),
+        ('Entertainment', 'Entertainment'),
+        ('Shopping', 'Shopping'),
+        ('Travel', 'Travel'),
+        ('Utilities', 'Utilities'),
+        ('Healthcare', 'Healthcare'),
+        ('Education', 'Education'),
+        ('Business', 'Business'),
+        ('Other', 'Other')
+    ], validators=[DataRequired()], default='Other')
+    submit = SubmitField('Save Template')
+
+class TemplateProductForm(FlaskForm):
+    name = StringField('Product Name', validators=[DataRequired(), Length(max=100)])
+    price = FloatField('Price', validators=[DataRequired()])
+    submit = SubmitField('Add Product')

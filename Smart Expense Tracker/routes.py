@@ -2,8 +2,8 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from smart_expense_splitter import app, db
-from models import User, Group, Member, Bill, Product, ProductMember
-from forms import LoginForm, RegistrationForm, GroupForm, MemberForm, BillForm, ProductForm
+from models import User, Group, Member, Bill, Product, ProductMember, BillTemplate, TemplateProduct
+from forms import LoginForm, RegistrationForm, GroupForm, MemberForm, BillForm, ProductForm, BillTemplateForm, TemplateProductForm
 from datetime import datetime
 # import pandas as pd
 import io
@@ -516,3 +516,139 @@ def terms():
 @app.route('/contact')
 def contact():
     return render_template('contact.html', title='Contact Us')
+
+# Bill Template routes
+@app.route('/templates')
+@login_required
+def bill_templates():
+    templates = BillTemplate.query.filter_by(user_id=current_user.id).order_by(BillTemplate.created_at.desc()).all()
+    return render_template('bill_templates.html', title='Bill Templates', templates=templates)
+
+@app.route('/template/new', methods=['GET', 'POST'])
+@login_required
+def new_bill_template():
+    form = BillTemplateForm()
+    if form.validate_on_submit():
+        template = BillTemplate(
+            name=form.name.data,
+            title=form.title.data,
+            description=form.description.data,
+            category=form.category.data,
+            user_id=current_user.id
+        )
+        db.session.add(template)
+        db.session.commit()
+        flash(f'Template "{form.name.data}" created successfully!', 'success')
+        return redirect(url_for('bill_template_detail', template_id=template.id))
+    return render_template('create_bill_template.html', title='New Bill Template', form=form)
+
+@app.route('/template/<int:template_id>')
+@login_required
+def bill_template_detail(template_id):
+    template = BillTemplate.query.get_or_404(template_id)
+    if template.user_id != current_user.id:
+        flash('You do not have permission to view this template.', 'danger')
+        return redirect(url_for('bill_templates'))
+    return render_template('bill_template_detail.html', title=template.name, template=template)
+
+@app.route('/template/<int:template_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_bill_template(template_id):
+    template = BillTemplate.query.get_or_404(template_id)
+    if template.user_id != current_user.id:
+        flash('You do not have permission to edit this template.', 'danger')
+        return redirect(url_for('bill_templates'))
+    form = BillTemplateForm(obj=template)
+    if form.validate_on_submit():
+        template.name = form.name.data
+        template.title = form.title.title
+        template.description = form.description.data
+        template.category = form.category.data
+        db.session.commit()
+        flash(f'Template "{form.name.data}" updated successfully!', 'success')
+        return redirect(url_for('bill_template_detail', template_id=template.id))
+    return render_template('edit_bill_template.html', title='Edit Template', form=form, template=template)
+
+@app.route('/template/<int:template_id>/delete', methods=['POST'])
+@login_required
+def delete_bill_template(template_id):
+    template = BillTemplate.query.get_or_404(template_id)
+    if template.user_id != current_user.id:
+        flash('You do not have permission to delete this template.', 'danger')
+        return redirect(url_for('bill_templates'))
+    db.session.delete(template)
+    db.session.commit()
+    flash(f'Template "{template.name}" deleted successfully!', 'success')
+    return redirect(url_for('bill_templates'))
+
+@app.route('/template/<int:template_id>/product/new', methods=['GET', 'POST'])
+@login_required
+def new_template_product(template_id):
+    template = BillTemplate.query.get_or_404(template_id)
+    if template.user_id != current_user.id:
+        flash('You do not have permission to add products to this template.', 'danger')
+        return redirect(url_for('bill_templates'))
+    form = TemplateProductForm()
+    if form.validate_on_submit():
+        template_product = TemplateProduct(
+            name=form.name.data,
+            price=form.price.data,
+            bill_template_id=template.id
+        )
+        db.session.add(template_product)
+        db.session.commit()
+        flash(f'Product "{form.name.data}" added to template!', 'success')
+        return redirect(url_for('bill_template_detail', template_id=template.id))
+    return render_template('create_template_product.html', title='Add Template Product', form=form, template=template)
+
+@app.route('/template/product/<int:product_id>/delete', methods=['POST'])
+@login_required
+def delete_template_product(product_id):
+    template_product = TemplateProduct.query.get_or_404(product_id)
+    template = template_product.bill_template
+    if template.user_id != current_user.id:
+        flash('You do not have permission to delete this template product.', 'danger')
+        return redirect(url_for('bill_templates'))
+    db.session.delete(template_product)
+    db.session.commit()
+    flash(f'Product "{template_product.name}" removed from template!', 'success')
+    return redirect(url_for('bill_template_detail', template_id=template.id))
+
+@app.route('/template/<int:template_id>/use/<int:group_id>')
+@login_required
+def use_bill_template(template_id, group_id):
+    template = BillTemplate.query.get_or_404(template_id)
+    group = Group.query.get_or_404(group_id)
+    
+    if template.user_id != current_user.id:
+        flash('You do not have permission to use this template.', 'danger')
+        return redirect(url_for('bill_templates'))
+    
+    if group.user_id != current_user.id:
+        flash('You do not have permission to add bills to this group.', 'danger')
+        return redirect(url_for('dashboard'))
+    
+    # Create a new bill from template
+    bill = Bill(
+        title=template.title,
+        description=template.description,
+        category=template.category,
+        group_id=group.id
+    )
+    db.session.add(bill)
+    db.session.commit()
+    
+    # Add template products to the new bill
+    for template_product in template.template_products:
+        # Create a placeholder product (user will need to assign payer and members)
+        product = Product(
+            name=template_product.name,
+            price=template_product.price,
+            bill_id=bill.id,
+            payer_id=group.members[0].id if group.members else None
+        )
+        db.session.add(product)
+        db.session.commit()
+    
+    flash(f'Bill created from template "{template.name}"!', 'success')
+    return redirect(url_for('edit_bill', bill_id=bill.id))

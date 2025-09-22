@@ -29,6 +29,7 @@ class User(db.Model, UserMixin):
     
     # Relationships
     groups = db.relationship('Group', back_populates='user', cascade='all, delete-orphan')
+    bill_templates = db.relationship('BillTemplate', back_populates='user', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -79,6 +80,32 @@ class Bill(db.Model):
     # Relationships
     group = db.relationship('Group', back_populates='bills')
     products = db.relationship('Product', back_populates='bill', cascade='all, delete-orphan')
+
+class BillTemplate(db.Model):
+    __tablename__ = 'bill_templates'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+    category = db.Column(db.String(50), default='Other')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', back_populates='bill_templates')
+    template_products = db.relationship('TemplateProduct', back_populates='bill_template', cascade='all, delete-orphan')
+
+class TemplateProduct(db.Model):
+    __tablename__ = 'template_products'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    bill_template_id = db.Column(db.Integer, db.ForeignKey('bill_templates.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    bill_template = db.relationship('BillTemplate', back_populates='template_products')
     
     def __repr__(self):
         return f'<Bill {self.title} for Group {self.group_id}>'
