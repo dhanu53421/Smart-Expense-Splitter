@@ -652,3 +652,86 @@ def use_bill_template(template_id, group_id):
     
     flash(f'Bill created from template "{template.name}"!', 'success')
     return redirect(url_for('edit_bill', bill_id=bill.id))
+
+# Bill Search and Filter routes
+@app.route('/bills')
+@login_required
+def bills():
+    # Get filter parameters
+    search_query = request.args.get('search', '', type=str)
+    category_filter = request.args.get('category', '', type=str)
+    date_from = request.args.get('date_from', '', type=str)
+    date_to = request.args.get('date_to', '', type=str)
+    group_filter = request.args.get('group', '', type=str)
+    sort_by = request.args.get('sort', 'date_desc', type=str)
+    
+    # Base query - get all bills for user's groups
+    query = Bill.query.join(Group).filter(Group.user_id == current_user.id)
+    
+    # Apply search filter
+    if search_query:
+        query = query.filter(
+            db.or_(
+                Bill.title.ilike(f'%{search_query}%'),
+                Bill.description.ilike(f'%{search_query}%')
+            )
+        )
+    
+    # Apply category filter
+    if category_filter:
+        query = query.filter(Bill.category == category_filter)
+    
+    # Apply date filters
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(Bill.date >= from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d').date()
+            query = query.filter(Bill.date <= to_date)
+        except ValueError:
+            pass
+    
+    # Apply group filter
+    if group_filter:
+        query = query.filter(Bill.group_id == int(group_filter))
+    
+    # Apply sorting
+    if sort_by == 'date_desc':
+        query = query.order_by(Bill.date.desc())
+    elif sort_by == 'date_asc':
+        query = query.order_by(Bill.date.asc())
+    elif sort_by == 'title_asc':
+        query = query.order_by(Bill.title.asc())
+    elif sort_by == 'title_desc':
+        query = query.order_by(Bill.title.desc())
+    elif sort_by == 'amount_desc':
+        query = query.outerjoin(Product).group_by(Bill.id).order_by(db.func.sum(Product.price).desc().nullslast())
+    elif sort_by == 'amount_asc':
+        query = query.outerjoin(Product).group_by(Bill.id).order_by(db.func.sum(Product.price).asc().nullslast())
+    
+    # Execute query with pagination
+    page = request.args.get('page', 1, type=int)
+    bills = query.paginate(page=page, per_page=10, error_out=False)
+    
+    # Get user's groups for filter dropdown
+    user_groups = Group.query.filter_by(user_id=current_user.id).all()
+    
+    # Get available categories
+    categories = ['Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 'Bills & Utilities', 'Healthcare', 'Travel', 'Education', 'Other']
+    
+    return render_template('bills.html', 
+                         title='Bills',
+                         bills=bills,
+                         user_groups=user_groups,
+                         categories=categories,
+                         search_query=search_query,
+                         category_filter=category_filter,
+                         date_from=date_from,
+                         date_to=date_to,
+                         group_filter=group_filter,
+                         sort_by=sort_by)
