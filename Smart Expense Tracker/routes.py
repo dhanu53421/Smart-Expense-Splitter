@@ -36,6 +36,12 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+# Settings route
+@app.route('/settings')
+@login_required
+def settings():
+    return render_template('settings.html', title='Settings')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:

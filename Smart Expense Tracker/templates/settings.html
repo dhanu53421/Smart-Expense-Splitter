@@ -1,0 +1,211 @@
+{% extends "layout.html" %}
+
+{% block title %}Settings - Smart Expense Splitter{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Settings</h1>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Account Settings -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="h5 mb-0"><i class="fas fa-user me-2"></i>Account Information</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Username:</strong></label>
+                        <p class="form-control-plaintext">{{ current_user.username }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Email:</strong></label>
+                        <p class="form-control-plaintext">{{ current_user.email }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Member Since:</strong></label>
+                        <p class="form-control-plaintext">{{ current_user.created_at.strftime('%B %d, %Y') if current_user.created_at else 'Unknown' }}</p>
+                    </div>
+                    <button class="btn btn-outline-primary" disabled>
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance Settings -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h3 class="h5 mb-0"><i class="fas fa-palette me-2"></i>Appearance</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="darkModeSwitch" onchange="toggleDarkMode()">
+                            <label class="form-check-label" for="darkModeSwitch">
+                                <i class="fas fa-moon me-2"></i>Dark Mode
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Theme Color</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary" style="width: 30px; height: 30px; border-radius: 50%;" disabled></button>
+                            <button class="btn btn-sm btn-success" style="width: 30px; height: 30px; border-radius: 50%;" disabled></button>
+                            <button class="btn btn-sm btn-danger" style="width: 30px; height: 30px; border-radius: 50%;" disabled></button>
+                            <button class="btn btn-sm btn-warning" style="width: 30px; height: 30px; border-radius: 50%;" disabled></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h3 class="h5 mb-0"><i class="fas fa-bell me-2"></i>Notifications</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                            <label class="form-check-label" for="emailNotifications">
+                                Email Notifications
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="billReminders">
+                            <label class="form-check-label" for="billReminders">
+                                Bill Reminders
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="settlementAlerts">
+                            <label class="form-check-label" for="settlementAlerts">
+                                Settlement Alerts
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="h5 mb-0"><i class="fas fa-database me-2"></i>Data Management</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button class="btn btn-outline-primary mb-2" disabled>
+                            <i class="fas fa-download me-2"></i>Export My Data
+                        </button>
+                        <small class="text-muted d-block">Download all your expense data as CSV</small>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-outline-secondary mb-2" disabled>
+                            <i class="fas fa-history me-2"></i>View Activity Log
+                        </button>
+                        <small class="text-muted d-block">See all your recent activities</small>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <button class="btn btn-outline-danger" disabled>
+                            <i class="fas fa-trash me-2"></i>Delete Account
+                        </button>
+                        <small class="text-muted d-block">Permanently delete your account and all data</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-end gap-2">
+                <button class="btn btn-secondary" onclick="resetSettings()">
+                    <i class="fas fa-undo me-2"></i>Reset to Defaults
+                </button>
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <i class="fas fa-save me-2"></i>Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDarkMode() {
+    const body = document.body;
+    const isDarkMode = document.getElementById('darkModeSwitch').checked;
+    
+    if (isDarkMode) {
+        body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'disabled');
+    }
+}
+
+function saveSettings() {
+    // Get all form values
+    const settings = {
+        darkMode: document.getElementById('darkModeSwitch').checked,
+        emailNotifications: document.getElementById('emailNotifications').checked,
+        billReminders: document.getElementById('billReminders').checked,
+        settlementAlerts: document.getElementById('settlementAlerts').checked
+    };
+    
+    // Save to localStorage (for now, can be extended to save to database)
+    localStorage.setItem('userSettings', JSON.stringify(settings));
+    
+    // Show success message
+    alert('Settings saved successfully!');
+}
+
+function resetSettings() {
+    if (confirm('Are you sure you want to reset all settings to defaults?')) {
+        document.getElementById('darkModeSwitch').checked = false;
+        document.getElementById('emailNotifications').checked = true;
+        document.getElementById('billReminders').checked = false;
+        document.getElementById('settlementAlerts').checked = false;
+        
+        localStorage.removeItem('userSettings');
+        localStorage.removeItem('darkMode');
+        
+        alert('Settings reset to defaults!');
+    }
+}
+
+// Load saved settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedSettings = localStorage.getItem('userSettings');
+    if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        document.getElementById('darkModeSwitch').checked = settings.darkMode;
+        document.getElementById('emailNotifications').checked = settings.emailNotifications;
+        document.getElementById('billReminders').checked = settings.billReminders;
+        document.getElementById('settlementAlerts').checked = settings.settlementAlerts;
+    }
+    
+    // Apply dark mode if enabled
+    if (document.getElementById('darkModeSwitch').checked) {
+        document.body.classList.add('dark-mode');
+    }
+});
+</script>
+{% endblock %}
