@@ -183,6 +183,7 @@ def new_bill(group_id):
             title=form.title.data,
             description=form.description.data,
             date=form.date.data,
+            category=form.category.data,
             group_id=group.id
         )
         db.session.add(bill)
@@ -245,6 +246,7 @@ def edit_bill(bill_id):
         bill.title = form.title.data
         bill.description = form.description.data
         bill.date = form.date.data
+        bill.category = form.category.data
         db.session.commit()
         flash(f'Bill "{form.title.data}" updated successfully!', 'success')
         return redirect(url_for('bill_detail', bill_id=bill.id))

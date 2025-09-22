@@ -41,6 +41,18 @@ class BillForm(FlaskForm):
     title = StringField('Bill Title', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=255)])
     date = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
+    category = SelectField('Category', choices=[
+        ('Food & Dining', 'Food & Dining'),
+        ('Transportation', 'Transportation'),
+        ('Entertainment', 'Entertainment'),
+        ('Shopping', 'Shopping'),
+        ('Travel', 'Travel'),
+        ('Utilities', 'Utilities'),
+        ('Healthcare', 'Healthcare'),
+        ('Education', 'Education'),
+        ('Business', 'Business'),
+        ('Other', 'Other')
+    ], validators=[DataRequired()], default='Other')
     submit = SubmitField('Create Bill')
 
 class ProductForm(FlaskForm):

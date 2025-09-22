@@ -56,6 +56,18 @@
                         {% endif %}
                         <div class="form-text">Optional: Add details about this bill.</div>
                     </div>
+                    <div class="mb-3">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.category.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Choose a category for this expense.</div>
+                    </div>
                     <div class="d-flex justify-content-between">
                         <a href="{{ url_for('group_detail', group_id=group.id) }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Cancel

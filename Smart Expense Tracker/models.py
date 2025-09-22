@@ -72,6 +72,7 @@ class Bill(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(255))
     date = db.Column(db.Date, default=datetime.utcnow().date)
+    category = db.Column(db.String(50), default='Other')
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
