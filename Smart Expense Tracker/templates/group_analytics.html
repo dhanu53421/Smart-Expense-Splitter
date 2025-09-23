@@ -1,0 +1,304 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ group.name }} Analytics - Smart Expense Splitter{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0">{{ group.name }} Analytics</h1>
+            <p class="text-muted mb-0">{{ group.description }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('export_group_csv', group_id=group.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </a>
+            <a href="{{ url_for('group_detail', group_id=group.id) }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Group
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-dollar-sign fa-2x text-success"></i>
+                    </div>
+                    <h3 class="h5 mb-1">Total Expenses</h3>
+                    <p class="h4 mb-0 text-success">${{ "%.2f"|format(group_analytics.total_expenses) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-receipt fa-2x text-info"></i>
+                    </div>
+                    <h3 class="h5 mb-1">Number of Bills</h3>
+                    <p class="h4 mb-0 text-info">{{ group_analytics.total_bills }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-2x text-warning"></i>
+                    </div>
+                    <h3 class="h5 mb-1">Average Bill</h3>
+                    <p class="h4 mb-0 text-warning">${{ "%.2f"|format(group_analytics.average_bill_amount) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h2 class="h5 mb-0">Filters</h2>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('group_analytics', group_id=group.id) }}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        <option value="food" {% if request.args.get('category') == 'food' %}selected{% endif %}>Food</option>
+                        <option value="transport" {% if request.args.get('category') == 'transport' %}selected{% endif %}>Transport</option>
+                        <option value="entertainment" {% if request.args.get('category') == 'entertainment' %}selected{% endif %}>Entertainment</option>
+                        <option value="utilities" {% if request.args.get('category') == 'utilities' %}selected{% endif %}>Utilities</option>
+                        <option value="other" {% if request.args.get('category') == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Month</label>
+                    <input type="month" name="month" class="form-control" value="{{ request.args.get('month') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Year</label>
+                    <input type="number" name="year" class="form-control" value="{{ request.args.get('year') }}" min="2020" max="{{ current_year }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Apply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Monthly Expenses Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h3 class="h5 mb-0">Monthly Expenses</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Distribution Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h3 class="h5 mb-0">Expenses by Category</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Expenses -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="h5 mb-0">Member Expenses</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Total Expenses</th>
+                                    <th>Number of Bills</th>
+                                    <th>Average Contribution</th>
+                                    <th>Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member_analytics in member_expenses %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="member-avatar me-3">
+                                                {{ member_analytics.member.name[0].upper() }}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ member_analytics.member.name }}</h6>
+                                                <small class="text-muted">{{ member_analytics.member.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${{ "%.2f"|format(member_analytics.total_expenses) }}</td>
+                                    <td>{{ member_analytics.bill_count }}</td>
+                                    <td>${{ "%.2f"|format(member_analytics.average_contribution) }}</td>
+                                    <td>
+                                        {% if member_analytics.balance >= 0 %}
+                                            <span class="text-success">+${{ "%.2f"|format(member_analytics.balance) }}</span>
+                                        {% else %}
+                                            <span class="text-danger">-${{ "%.2f"|format(-member_analytics.balance) }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Categories and Recent Bills -->
+    <div class="row">
+        <!-- Top Categories -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="h5 mb-0">Top Categories</h3>
+                </div>
+                <div class="card-body">
+                    {% if group_analytics.top_categories %}
+                    <div class="list-group list-group-flush">
+                        {% for category in group_analytics.top_categories %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <h6 class="mb-1">{{ category.category|title }}</h6>
+                                <small class="text-muted">{{ category.count }} bills</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">${{ "%.2f"|format(category.total) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No category data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Bills -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="h5 mb-0">Recent Bills</h3>
+                </div>
+                <div class="card-body">
+                    {% if recent_bills %}
+                    <div class="list-group list-group-flush">
+                        {% for bill in recent_bills %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <h6 class="mb-1">{{ bill.title }}</h6>
+                                <small class="text-muted">{{ bill.created_at.strftime('%b %d, %Y') }}</small>
+                            </div>
+                            <span class="badge bg-success">${{ "%.2f"|format(bill.total_amount) }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No recent bills</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Monthly Expenses Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyChart = new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: {{ monthly_data.labels|tojson }},
+            datasets: [{
+                label: 'Monthly Expenses',
+                data: {{ monthly_data.data|tojson }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Distribution Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_data.labels|tojson }},
+            datasets: [{
+                data: {{ category_data.data|tojson }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
