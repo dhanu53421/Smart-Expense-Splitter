@@ -218,7 +218,7 @@
                                 <h6 class="mb-1">{{ bill.title }}</h6>
                                 <small class="text-muted">{{ bill.created_at.strftime('%b %d, %Y') }}</small>
                             </div>
-                            <span class="badge bg-success">${{ "%.2f"|format(bill.total_amount) }}</span>
+                            <span class="badge bg-success">${{ "%.2f"|format(bill.get_total_amount()) }}</span>
                         </div>
                         {% endfor %}
                     </div>

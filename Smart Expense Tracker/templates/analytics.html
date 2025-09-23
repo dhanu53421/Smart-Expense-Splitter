@@ -25,7 +25,7 @@
                         <i class="fas fa-dollar-sign fa-2x text-success"></i>
                     </div>
                     <h3 class="h5 mb-1">Total Expenses</h3>
-                    <p class="h4 mb-0 text-success">${{ "%.2f"|format(user_analytics.total_expenses) }}</p>
+                    <p class="h4 mb-0 text-success">${{ "%.2f"|format(total_expenses) }}</p>
                 </div>
             </div>
         </div>
@@ -36,7 +36,7 @@
                         <i class="fas fa-users fa-2x text-primary"></i>
                     </div>
                     <h3 class="h5 mb-1">Active Groups</h3>
-                    <p class="h4 mb-0 text-primary">{{ user_analytics.active_groups }}</p>
+                    <p class="h4 mb-0 text-primary">{{ total_groups }}</p>
                 </div>
             </div>
         </div>
@@ -47,7 +47,7 @@
                         <i class="fas fa-receipt fa-2x text-info"></i>
                     </div>
                     <h3 class="h5 mb-1">Total Bills</h3>
-                    <p class="h4 mb-0 text-info">{{ user_analytics.total_bills }}</p>
+                    <p class="h4 mb-0 text-info">{{ total_bills }}</p>
                 </div>
             </div>
         </div>
@@ -58,7 +58,7 @@
                         <i class="fas fa-chart-line fa-2x text-warning"></i>
                     </div>
                     <h3 class="h5 mb-1">Avg Bill Amount</h3>
-                    <p class="h4 mb-0 text-warning">${{ "%.2f"|format(user_analytics.average_bill_amount) }}</p>
+                    <p class="h4 mb-0 text-warning">${{ "%.2f"|format(average_bill_amount) }}</p>
                 </div>
             </div>
         </div>
@@ -191,9 +191,9 @@
                     <h3 class="h5 mb-0">Top Categories</h3>
                 </div>
                 <div class="card-body">
-                    {% if user_analytics.top_categories %}
+                    {% if top_categories %}
                     <div class="list-group list-group-flush">
-                        {% for category in user_analytics.top_categories %}
+                        {% for category in top_categories %}
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <div>
                                 <h6 class="mb-1">{{ category.category|title }}</h6>
@@ -228,7 +228,7 @@
                                 <h6 class="mb-1">{{ bill.title }}</h6>
                                 <small class="text-muted">{{ bill.group.name }} • {{ bill.created_at.strftime('%b %d, %Y') }}</small>
                             </div>
-                            <span class="badge bg-success">${{ "%.2f"|format(bill.total_amount) }}</span>
+                            <span class="badge bg-success">${{ "%.2f"|format(bill.get_total_amount()) }}</span>
                         </div>
                         {% endfor %}
                     </div>

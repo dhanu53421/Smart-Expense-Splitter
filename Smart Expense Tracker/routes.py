@@ -748,6 +748,7 @@ def analytics():
     total_expenses = current_user.get_total_expenses()
     total_groups = len(groups)
     total_bills = sum(len(group.bills) for group in groups)
+    average_bill_amount = total_expenses / total_bills if total_bills > 0 else 0
     
     # Category breakdown
     category_totals = current_user.get_expenses_by_category()
@@ -768,19 +769,63 @@ def analytics():
     
     top_categories = sorted(category_summary.items(), key=lambda x: x[1], reverse=True)[:5]
     
+    # Format top categories for template
+    formatted_top_categories = []
+    for category, total in top_categories:
+        count = sum(1 for group in groups for cat, amt in group.get_top_categories() if cat == category)
+        formatted_top_categories.append({
+            'category': category,
+            'total': total,
+            'count': count
+        })
+    
     # Recent activity (last 5 bills)
     recent_bills = Bill.query.join(Group).filter(Group.user_id == current_user.id).order_by(Bill.created_at.desc()).limit(5).all()
+    
+    # Format monthly data for charts
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_data = {
+        'labels': months,
+        'data': [monthly_expenses.get(f"{current_year}-{month:02d}", 0) for month in range(1, 13)]
+    }
+    
+    # Format category data for charts
+    category_data = {
+        'labels': list(category_totals.keys()),
+        'data': list(category_totals.values())
+    }
+    
+    # Create group analytics list
+    group_analytics_list = []
+    for group in groups:
+        group_total = group.get_total_expenses()
+        group_bills = len(group.bills)
+        group_avg = group.get_average_bill_amount()
+        group_top_categories = group.get_top_categories()
+        
+        group_analytics_list.append({
+            'group': group,
+            'total_expenses': group_total,
+            'total_bills': group_bills,
+            'average_bill_amount': group_avg,
+            'top_categories': group_top_categories
+        })
     
     return render_template('analytics.html',
                            title='Analytics',
                            total_expenses=total_expenses,
                            total_groups=total_groups,
                            total_bills=total_bills,
+                           average_bill_amount=average_bill_amount,
                            category_totals=category_totals,
                            monthly_expenses=monthly_expenses,
-                           top_categories=top_categories,
+                           top_categories=formatted_top_categories,
                            recent_bills=recent_bills,
-                           current_year=current_year)
+                           current_year=current_year,
+                           groups=groups,
+                           monthly_data=monthly_data,
+                           category_data=category_data,
+                           group_analytics_list=group_analytics_list)
 
 @app.route('/analytics/group/<int:group_id>')
 @login_required
