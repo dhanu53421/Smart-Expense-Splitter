@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{{ url_for('settings') }}" class="list-group-item list-group-item-action">General Settings</a>
+                <a href="{{ url_for('currency_settings') }}" class="list-group-item list-group-item-action active">Currency Settings</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <h2>Currency Settings</h2>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Default Currency Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Default Currency</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('currency_settings') }}">
+                        {{ form.hidden_tag() }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.default_currency.id }}" class="form-label">Select Default Currency</label>
+                                    <select class="form-select" id="{{ form.default_currency.id }}" name="{{ form.default_currency.name }}">
+                                        {% for currency in user_currencies %}
+                                            <option value="{{ currency.id }}" {% if default_currency and currency.id == default_currency.id %}selected{% endif %}>
+                                                {{ currency.code }} - {{ currency.name }} ({{ currency.symbol }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary mb-3">Update Default</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Add New Currency -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Currency</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('currency_settings') }}">
+                        {{ add_form.hidden_tag() }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ add_form.currency_id.id }}" class="form-label">Select Currency</label>
+                                    <select class="form-select" id="{{ add_form.currency_id.id }}" name="{{ add_form.currency_id.name }}">
+                                        <option value="">Choose a currency...</option>
+                                        {% for currency in available_currencies %}
+                                            {% if currency not in user_currencies %}
+                                                <option value="{{ currency.id }}">
+                                                    {{ currency.code }} - {{ currency.name }} ({{ currency.symbol }})
+                                                </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-center">
+                                <div class="form-check">
+                                    {{ add_form.make_default(class="form-check-input") }}
+                                    <label class="form-check-label" for="{{ add_form.make_default.id }}">
+                                        Make default
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success mb-3">Add Currency</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Active Currencies -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Active Currencies</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_currencies %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Symbol</th>
+                                        <th>Format</th>
+                                        <th>Default</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for currency in user_currencies %}
+                                        <tr>
+                                            <td><strong>{{ currency.code }}</strong></td>
+                                            <td>{{ currency.name }}</td>
+                                            <td>{{ currency.symbol }}</td>
+                                            <td>
+                                                {% if currency.code == 'USD' %}$1,234.56{% elif currency.code == 'EUR' %}€1.234,56{% elif currency.code == 'GBP' %}£1,234.56{% elif currency.code == 'JPY' %}¥1,235{% else %}{{ currency.symbol }}1,234.56{% endif %}
+                                            </td>
+                                            <td>
+                                                {% if default_currency and currency.id == default_currency.id %}
+                                                    <span class="badge bg-success">Default</span>
+                                                {% else %}
+                                                    <form method="POST" action="{{ url_for('set_default_currency_route', currency_id=currency.id) }}" style="display: inline;">
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary">Set as Default</button>
+                                                    </form>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user_currencies|length > 1 %}
+                                                    <form method="POST" action="{{ url_for('remove_currency', currency_id=currency.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to remove this currency?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                                    </form>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot remove last currency">Remove</button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> No currencies added yet. Use the form above to add currencies.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-dismiss alerts after 5 seconds
+    setTimeout(function() {
+        document.querySelectorAll('.alert').forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
+{% endblock %}

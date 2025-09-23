@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField, FloatField, DateField, SelectField, SelectMultipleField
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, FloatField, DateField, SelectField, SelectMultipleField, BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, Regexp
 from models import User
 
@@ -84,3 +84,36 @@ class TemplateProductForm(FlaskForm):
     name = StringField('Product Name', validators=[DataRequired(), Length(max=100)])
     price = FloatField('Price', validators=[DataRequired()])
     submit = SubmitField('Add Product')
+
+class CurrencySettingsForm(FlaskForm):
+    default_currency = SelectField('Default Currency', coerce=int, validators=[DataRequired()])
+    currencies = SelectMultipleField('Active Currencies', coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Save Currency Settings')
+    
+    def __init__(self, user_id=None, *args, **kwargs):
+        super(CurrencySettingsForm, self).__init__(*args, **kwargs)
+        from models import Currency, UserCurrency
+        # Get all active currencies
+        active_currencies = Currency.query.filter_by(is_active=True).all()
+        self.default_currency.choices = [(c.id, f"{c.code} - {c.name}") for c in active_currencies]
+        self.currencies.choices = [(c.id, f"{c.code} - {c.name}") for c in active_currencies]
+
+class AddCurrencyForm(FlaskForm):
+    currency_id = SelectField('Currency', coerce=int, validators=[DataRequired()])
+    make_default = BooleanField('Make this my default currency')
+    submit = SubmitField('Add Currency')
+    
+    def __init__(self, user_id=None, *args, **kwargs):
+        super(AddCurrencyForm, self).__init__(*args, **kwargs)
+        from models import Currency, UserCurrency
+        # Get currencies not already added by user
+        if user_id:
+            user_currency_ids = [uc.currency_id for uc in UserCurrency.query.filter_by(user_id=user_id, is_active=True).all()]
+            available_currencies = Currency.query.filter(
+                Currency.is_active == True,
+                ~Currency.id.in_(user_currency_ids)
+            ).all()
+        else:
+            available_currencies = Currency.query.filter_by(is_active=True).all()
+        
+        self.currency_id.choices = [(c.id, f"{c.code} - {c.name}") for c in available_currencies]

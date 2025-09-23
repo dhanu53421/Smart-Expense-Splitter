@@ -12,6 +12,16 @@
     </div>
 
     <div class="row">
+        <!-- Settings Sidebar -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">General Settings</a>
+                <a href="{{ url_for('currency_settings') }}" class="list-group-item list-group-item-action">Currency Settings</a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="row">
         <!-- Account Settings -->
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm h-100">
@@ -128,6 +138,8 @@
                         <small class="text-muted d-block">Permanently delete your account and all data</small>
                     </div>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>

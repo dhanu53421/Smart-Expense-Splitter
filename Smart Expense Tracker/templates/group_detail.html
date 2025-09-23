@@ -135,7 +135,7 @@
                                     </td>
                                     <td>{{ bill.date.strftime('%b %d, %Y') }}</td>
                                     <td>{{ bill.products|length }}</td>
-                                    <td class="text-end">${{ "%.2f"|format(bill.get_total_amount()) }}</td>
+                                    <td class="text-end">{{ bill.get_total_amount() | currency_format }}</td>
                                     <td class="text-center">
                                         <div class="dropdown">
                                             <button class="btn btn-sm btn-link text-muted dropdown-toggle" type="button" id="billActions{{ bill.id }}" data-bs-toggle="dropdown" aria-expanded="false">

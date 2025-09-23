@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
+import json
 
 # Create db instance that will be initialized in the main app
 db = SQLAlchemy()
@@ -66,6 +67,86 @@ class User(db.Model, UserMixin):
             return monthly_totals.get(month_key, 0)
         
         return monthly_totals
+    
+    def get_default_currency(self):
+        """Get the user's default currency"""
+        default = UserCurrency.query.filter_by(user_id=self.id, is_default=True, is_active=True).first()
+        if default:
+            return default.currency
+        return None
+    
+    def get_active_currencies(self):
+        """Get all active currencies for the user"""
+        return [uc.currency for uc in UserCurrency.query.filter_by(user_id=self.id, is_active=True).all()]
+    
+    def add_currency(self, currency_id, is_default=False):
+        """Add a currency to user's active currencies"""
+        currency = Currency.query.get(currency_id)
+        if not currency or not currency.is_active:
+            return False
+        
+        # Check if currency already exists for user
+        existing = UserCurrency.query.filter_by(user_id=self.id, currency_id=currency_id).first()
+        if existing:
+            if not existing.is_active:
+                existing.is_active = True
+                existing.is_default = is_default
+                db.session.commit()
+            return True
+        
+        # If this is the first currency or is_default is True, make it default
+        if is_default or not self.get_active_currencies():
+            # Remove existing default
+            UserCurrency.query.filter_by(user_id=self.id, is_default=True).update({'is_default': False})
+        
+        user_currency = UserCurrency(
+            user_id=self.id,
+            currency_id=currency_id,
+            is_default=is_default or not self.get_active_currencies()
+        )
+        db.session.add(user_currency)
+        db.session.commit()
+        return True
+    
+    def remove_currency(self, currency_id):
+        """Remove a currency from user's active currencies"""
+        user_currency = UserCurrency.query.filter_by(user_id=self.id, currency_id=currency_id, is_active=True).first()
+        if not user_currency:
+            return False
+        
+        # Check if this is the last currency
+        active_currencies = UserCurrency.query.filter_by(user_id=self.id, is_active=True).count()
+        if active_currencies <= 1:
+            return False  # Cannot remove the last currency
+        
+        # If this was the default, set another currency as default
+        if user_currency.is_default:
+            user_currency.is_active = False
+            user_currency.is_default = False
+            
+            # Find another active currency to make default
+            other_currency = UserCurrency.query.filter_by(user_id=self.id, is_active=True).first()
+            if other_currency:
+                other_currency.is_default = True
+        else:
+            user_currency.is_active = False
+        
+        db.session.commit()
+        return True
+    
+    def set_default_currency(self, currency_id):
+        """Set a currency as default for the user"""
+        user_currency = UserCurrency.query.filter_by(user_id=self.id, currency_id=currency_id, is_active=True).first()
+        if not user_currency:
+            return False
+        
+        # Remove existing default
+        UserCurrency.query.filter_by(user_id=self.id, is_default=True).update({'is_default': False})
+        
+        # Set new default
+        user_currency.is_default = True
+        db.session.commit()
+        return True
 
 class Group(db.Model):
     __tablename__ = 'groups'
@@ -451,7 +532,7 @@ class Product(db.Model):
     members_involved = db.relationship('ProductMember', back_populates='product', cascade='all, delete-orphan')
     
     def __repr__(self):
-        return f'<Product {self.name} in Bill {self.bill_id}>'
+        return f'<Product {self.name} in Bill {self.id}>'
     
     @property
     def members_count(self):
@@ -462,3 +543,117 @@ class Product(db.Model):
     def payer_name(self):
         """Get the name of the member who paid for this product"""
         return self.payer.name if self.payer else 'Unknown'
+
+class Currency(db.Model):
+    __tablename__ = 'currencies'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(3), unique=True, nullable=False)  # ISO 4217 code (USD, EUR, etc.)
+    name = db.Column(db.String(100), nullable=False)
+    symbol = db.Column(db.String(10), nullable=False)
+    decimal_places = db.Column(db.Integer, default=2)
+    exchange_rate = db.Column(db.Float, default=1.0)  # Rate relative to base currency
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def format_amount(self, amount):
+        """Format amount according to currency rules"""
+        if not amount:
+            amount = 0
+        
+        # Handle different currency formatting
+        if self.code == 'USD':
+            return f"${amount:,.2f}"
+        elif self.code == 'EUR':
+            # European format: €1.234,56
+            return f"€{amount:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+        elif self.code == 'GBP':
+            return f"£{amount:,.2f}"
+        elif self.code == 'JPY':
+            return f"¥{int(amount):,}"
+        elif self.code == 'INR':
+            return f"₹{amount:,.2f}"
+        elif self.code == 'CNY':
+            return f"¥{amount:,.2f}"
+        else:
+            # Default format
+            return f"{self.symbol}{amount:,.2f}"
+
+    def format_amount_simple(self, amount):
+        """Simple format without currency symbol"""
+        if not amount:
+            amount = 0
+        return f"{amount:,.2f}"
+
+    def __repr__(self):
+        return f'<Currency {self.code} - {self.name}>'
+    
+    def format_amount(self, amount):
+        """Format amount according to currency settings"""
+        formatted = f"{self.symbol}{amount:,.{self.decimal_places}f}"
+        return formatted
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'code': self.code,
+            'name': self.name,
+            'symbol': self.symbol,
+            'decimal_places': self.decimal_places,
+            'exchange_rate': self.exchange_rate,
+            'is_active': self.is_active
+        }
+
+class UserCurrency(db.Model):
+    __tablename__ = 'user_currencies'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    currency_id = db.Column(db.Integer, db.ForeignKey('currencies.id'), nullable=False)
+    is_default = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='user_currencies')
+    currency = db.relationship('Currency', backref='user_currencies')
+    
+    __table_args__ = (db.UniqueConstraint('user_id', 'currency_id'),)
+    
+    def __repr__(self):
+        return f'<UserCurrency User:{self.user_id} Currency:{self.currency_id} Default:{self.is_default}>'
+
+# Add currency relationship to User model
+User.currencies = db.relationship('UserCurrency', back_populates='user', cascade='all, delete-orphan')
+
+def populate_initial_currencies():
+    """Populate the database with common currencies"""
+    currencies = [
+        {'code': 'USD', 'name': 'US Dollar', 'symbol': '$', 'decimal_places': 2},
+        {'code': 'EUR', 'name': 'Euro', 'symbol': '€', 'decimal_places': 2},
+        {'code': 'GBP', 'name': 'British Pound', 'symbol': '£', 'decimal_places': 2},
+        {'code': 'JPY', 'name': 'Japanese Yen', 'symbol': '¥', 'decimal_places': 0},
+        {'code': 'CAD', 'name': 'Canadian Dollar', 'symbol': 'C$', 'decimal_places': 2},
+        {'code': 'AUD', 'name': 'Australian Dollar', 'symbol': 'A$', 'decimal_places': 2},
+        {'code': 'CHF', 'name': 'Swiss Franc', 'symbol': 'CHF', 'decimal_places': 2},
+        {'code': 'CNY', 'name': 'Chinese Yuan', 'symbol': '¥', 'decimal_places': 2},
+        {'code': 'INR', 'name': 'Indian Rupee', 'symbol': '₹', 'decimal_places': 2},
+        {'code': 'KRW', 'name': 'South Korean Won', 'symbol': '₩', 'decimal_places': 0},
+        {'code': 'BRL', 'name': 'Brazilian Real', 'symbol': 'R$', 'decimal_places': 2},
+        {'code': 'MXN', 'name': 'Mexican Peso', 'symbol': '$', 'decimal_places': 2},
+        {'code': 'SGD', 'name': 'Singapore Dollar', 'symbol': 'S$', 'decimal_places': 2},
+        {'code': 'HKD', 'name': 'Hong Kong Dollar', 'symbol': 'HK$', 'decimal_places': 2},
+        {'code': 'SEK', 'name': 'Swedish Krona', 'symbol': 'kr', 'decimal_places': 2},
+        {'code': 'NOK', 'name': 'Norwegian Krone', 'symbol': 'kr', 'decimal_places': 2},
+        {'code': 'NZD', 'name': 'New Zealand Dollar', 'symbol': 'NZ$', 'decimal_places': 2},
+        {'code': 'PLN', 'name': 'Polish Zloty', 'symbol': 'zł', 'decimal_places': 2},
+        {'code': 'DKK', 'name': 'Danish Krone', 'symbol': 'kr', 'decimal_places': 2},
+        {'code': 'CZK', 'name': 'Czech Koruna', 'symbol': 'Kč', 'decimal_places': 2}
+    ]
+    
+    for currency_data in currencies:
+        existing = Currency.query.filter_by(code=currency_data['code']).first()
+        if not existing:
+            currency = Currency(**currency_data)
+            db.session.add(currency)
+    
+    db.session.commit()

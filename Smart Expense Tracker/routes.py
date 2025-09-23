@@ -42,6 +42,73 @@ def logout():
 def settings():
     return render_template('settings.html', title='Settings')
 
+@app.route('/settings/currency', methods=['GET', 'POST'])
+@login_required
+def currency_settings():
+    from models import Currency, UserCurrency, populate_initial_currencies
+    from forms import CurrencySettingsForm, AddCurrencyForm
+    
+    # Ensure currencies are populated
+    populate_initial_currencies()
+    
+    # Get user's current currencies
+    user_currencies = current_user.get_active_currencies()
+    default_currency = current_user.get_default_currency()
+    
+    # Currency settings form
+    form = CurrencySettingsForm(user_id=current_user.id)
+    add_form = AddCurrencyForm(user_id=current_user.id)
+    
+    if form.submit.data and form.validate_on_submit():
+        # Update default currency
+        if form.default_currency.data:
+            current_user.set_default_currency(form.default_currency.data)
+            flash('Default currency updated successfully!', 'success')
+        return redirect(url_for('currency_settings'))
+    
+    if add_form.submit.data and add_form.validate_on_submit():
+        # Add new currency
+        if current_user.add_currency(add_form.currency_id.data, add_form.make_default.data):
+            flash('Currency added successfully!', 'success')
+            if add_form.make_default.data:
+                flash('Default currency updated!', 'success')
+        else:
+            flash('Failed to add currency. Please try again.', 'danger')
+        return redirect(url_for('currency_settings'))
+    
+    # Set form defaults
+    if default_currency:
+        form.default_currency.data = default_currency.id
+    
+    # Get all available currencies for the dropdown
+    available_currencies = Currency.query.filter_by(is_active=True).all()
+    
+    return render_template('currency_settings.html', 
+                           title='Currency Settings',
+                           form=form,
+                           add_form=add_form,
+                           user_currencies=user_currencies,
+                           default_currency=default_currency,
+                           available_currencies=available_currencies)
+
+@app.route('/settings/currency/remove/<int:currency_id>', methods=['POST'])
+@login_required
+def remove_currency(currency_id):
+    if current_user.remove_currency(currency_id):
+        flash('Currency removed successfully!', 'success')
+    else:
+        flash('Cannot remove currency. You must have at least one active currency.', 'danger')
+    return redirect(url_for('currency_settings'))
+
+@app.route('/settings/currency/set-default/<int:currency_id>', methods=['POST'])
+@login_required
+def set_default_currency_route(currency_id):
+    if current_user.set_default_currency(currency_id):
+        flash('Default currency updated successfully!', 'success')
+    else:
+        flash('Failed to update default currency.', 'danger')
+    return redirect(url_for('currency_settings'))
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
