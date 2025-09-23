@@ -58,7 +58,11 @@
                         <i class="fas fa-chart-line fa-2x text-warning"></i>
                     </div>
                     <h3 class="h5 mb-1">Avg Bill Amount</h3>
+<<<<<<< HEAD
                     <p class="h4 mb-0 text-warning">{{ average_bill_amount | currency_format }}</p>
+=======
+                    <p class="h4 mb-0 text-warning">${{ "%.2f"|format(average_bill_amount) }}</p>
+>>>>>>> dddac79 (refactor(analytics): improve data handling and template rendering)
                 </div>
             </div>
         </div>
@@ -228,7 +232,11 @@
                                 <h6 class="mb-1">{{ bill.title }}</h6>
                                 <small class="text-muted">{{ bill.group.name }} • {{ bill.created_at.strftime('%b %d, %Y') }}</small>
                             </div>
+<<<<<<< HEAD
                             <span class="badge bg-success">{{ bill.get_total_amount() | currency_format }}</span>
+=======
+                            <span class="badge bg-success">${{ "%.2f"|format(bill.get_total_amount()) }}</span>
+>>>>>>> dddac79 (refactor(analytics): improve data handling and template rendering)
                         </div>
                         {% endfor %}
                     </div>
