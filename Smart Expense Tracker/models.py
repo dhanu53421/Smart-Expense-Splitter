@@ -33,6 +33,39 @@ class User(db.Model, UserMixin):
     
     def __repr__(self):
         return f'<User {self.username}>'
+    
+    def get_total_expenses(self):
+        """Get total expenses across all groups"""
+        total = 0
+        for group in self.groups:
+            total += group.get_total_expenses()
+        return total
+    
+    def get_expenses_by_category(self):
+        """Get expenses grouped by category across all groups"""
+        category_totals = {}
+        for group in self.groups:
+            group_categories = group.get_expenses_by_category()
+            for category, amount in group_categories.items():
+                category_totals[category] = category_totals.get(category, 0) + amount
+        return category_totals
+    
+    def get_monthly_expenses(self, year=None, month=None):
+        """Get monthly expenses for a specific month or all months"""
+        if year is None:
+            year = datetime.now().year
+        
+        monthly_totals = {}
+        for group in self.groups:
+            group_monthly = group.get_monthly_expenses(year)
+            for month_key, amount in group_monthly.items():
+                monthly_totals[month_key] = monthly_totals.get(month_key, 0) + amount
+        
+        if month is not None:
+            month_key = f"{year}-{month:02d}"
+            return monthly_totals.get(month_key, 0)
+        
+        return monthly_totals
 
 class Group(db.Model):
     __tablename__ = 'groups'
@@ -49,6 +82,56 @@ class Group(db.Model):
     
     def __repr__(self):
         return f'<Group {self.name}>'
+    
+    def get_total_expenses(self):
+        """Get total expenses for this group"""
+        total = 0
+        for bill in self.bills:
+            total += bill.get_total_amount()
+        return total
+    
+    def get_expenses_by_category(self):
+        """Get expenses grouped by category for this group"""
+        category_totals = {}
+        for bill in self.bills:
+            category = bill.category
+            amount = bill.get_total_amount()
+            category_totals[category] = category_totals.get(category, 0) + amount
+        return category_totals
+    
+    def get_monthly_expenses(self, year=None):
+        """Get monthly expenses for this group"""
+        if year is None:
+            year = datetime.now().year
+        
+        monthly_totals = {}
+        for bill in self.bills:
+            if bill.date.year == year:
+                month_key = f"{bill.date.year}-{bill.date.month:02d}"
+                monthly_totals[month_key] = monthly_totals.get(month_key, 0) + bill.get_total_amount()
+        
+        return monthly_totals
+    
+    def get_member_expenses(self, member_id):
+        """Get expenses for a specific member in this group"""
+        member_total = 0
+        for bill in self.bills:
+            member_summary = bill.get_member_summary()
+            if member_id in member_summary:
+                member_total += member_summary[member_id]['owes']
+        return member_total
+    
+    def get_top_categories(self, limit=5):
+        """Get top expense categories"""
+        categories = self.get_expenses_by_category()
+        return sorted(categories.items(), key=lambda x: x[1], reverse=True)[:limit]
+    
+    def get_average_bill_amount(self):
+        """Get average bill amount for this group"""
+        if not self.bills:
+            return 0
+        total = self.get_total_expenses()
+        return total / len(self.bills)
 
 class Member(db.Model):
     __tablename__ = 'members'

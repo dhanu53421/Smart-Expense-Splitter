@@ -735,3 +735,179 @@ def bills():
                          date_to=date_to,
                          group_filter=group_filter,
                          sort_by=sort_by)
+
+# Analytics routes
+@app.route('/analytics')
+@login_required
+def analytics():
+    """Main analytics dashboard"""
+    # Get user's groups
+    groups = Group.query.filter_by(user_id=current_user.id).all()
+    
+    # Overall statistics
+    total_expenses = current_user.get_total_expenses()
+    total_groups = len(groups)
+    total_bills = sum(len(group.bills) for group in groups)
+    
+    # Category breakdown
+    category_totals = current_user.get_expenses_by_category()
+    
+    # Monthly expenses for current year
+    current_year = datetime.now().year
+    monthly_expenses = current_user.get_monthly_expenses(current_year)
+    
+    # Top categories
+    all_categories = []
+    for group in groups:
+        all_categories.extend(group.get_top_categories())
+    
+    # Combine and sort categories
+    category_summary = {}
+    for category, amount in all_categories:
+        category_summary[category] = category_summary.get(category, 0) + amount
+    
+    top_categories = sorted(category_summary.items(), key=lambda x: x[1], reverse=True)[:5]
+    
+    # Recent activity (last 5 bills)
+    recent_bills = Bill.query.join(Group).filter(Group.user_id == current_user.id).order_by(Bill.created_at.desc()).limit(5).all()
+    
+    return render_template('analytics.html',
+                           title='Analytics',
+                           total_expenses=total_expenses,
+                           total_groups=total_groups,
+                           total_bills=total_bills,
+                           category_totals=category_totals,
+                           monthly_expenses=monthly_expenses,
+                           top_categories=top_categories,
+                           recent_bills=recent_bills,
+                           current_year=current_year)
+
+@app.route('/analytics/group/<int:group_id>')
+@login_required
+def group_analytics(group_id):
+    """Group-specific analytics"""
+    group = Group.query.get_or_404(group_id)
+    if group.user_id != current_user.id:
+        flash('You do not have permission to view analytics for this group.', 'danger')
+        return redirect(url_for('analytics'))
+    
+    # Group statistics
+    total_expenses = group.get_total_expenses()
+    total_bills = len(group.bills)
+    average_bill = group.get_average_bill_amount()
+    
+    # Category breakdown for group
+    category_totals = group.get_expenses_by_category()
+    
+    # Monthly expenses for current year
+    current_year = datetime.now().year
+    monthly_expenses = group.get_monthly_expenses(current_year)
+    
+    # Top categories for group
+    top_categories = group.get_top_categories()
+    
+    # Member expenses
+    member_expenses = []
+    for member in group.members:
+        member_total = group.get_member_expenses(member.id)
+        member_expenses.append({
+            'member': member,
+            'total_expense': member_total
+        })
+    
+    # Sort by expense amount
+    member_expenses.sort(key=lambda x: x['total_expense'], reverse=True)
+    
+    # Recent bills for this group
+    recent_bills = Bill.query.filter_by(group_id=group.id).order_by(Bill.created_at.desc()).limit(5).all()
+    
+    return render_template('group_analytics.html',
+                           title=f'Analytics - {group.name}',
+                           group=group,
+                           total_expenses=total_expenses,
+                           total_bills=total_bills,
+                           average_bill=average_bill,
+                           category_totals=category_totals,
+                           monthly_expenses=monthly_expenses,
+                           top_categories=top_categories,
+                           member_expenses=member_expenses,
+                           recent_bills=recent_bills,
+                           current_year=current_year)
+
+@app.route('/analytics/export/csv')
+@login_required
+def export_analytics_csv():
+    """Export analytics data as CSV"""
+    import csv
+    
+    # Get user's groups
+    groups = Group.query.filter_by(user_id=current_user.id).all()
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['Group Name', 'Bill Title', 'Category', 'Date', 'Total Amount', 'Description'])
+    
+    # Write data
+    for group in groups:
+        for bill in group.bills:
+            writer.writerow([
+                group.name,
+                bill.title,
+                bill.category,
+                bill.date.strftime('%Y-%m-%d'),
+                f"{bill.get_total_amount():.2f}",
+                bill.description or ''
+            ])
+    
+    # Prepare response
+    output.seek(0)
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'expense_analytics_{datetime.now().strftime("%Y%m%d")}.csv'
+    )
+
+@app.route('/api/analytics/monthly-data/<int:year>')
+@login_required
+def api_monthly_data(year):
+    """API endpoint for monthly expense data"""
+    monthly_data = current_user.get_monthly_expenses(year)
+    
+    # Format data for charts
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    data = []
+    
+    for month in range(1, 13):
+        month_key = f"{year}-{month:02d}"
+        amount = monthly_data.get(month_key, 0)
+        data.append({
+            'month': months[month-1],
+            'amount': amount
+        })
+    
+    return jsonify({
+        'year': year,
+        'data': data
+    })
+
+@app.route('/api/analytics/category-data')
+@login_required
+def api_category_data():
+    """API endpoint for category expense data"""
+    category_data = current_user.get_expenses_by_category()
+    
+    # Format data for charts
+    data = []
+    for category, amount in category_data.items():
+        data.append({
+            'category': category,
+            'amount': amount
+        })
+    
+    return jsonify({
+        'data': data
+    })
