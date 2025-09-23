@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_wtf import CSRFProtect
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 # import pandas as pd
@@ -20,6 +21,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-dev-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///expense_splitter.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for CSRF tokens
+
+# Initialize CSRF protection
+csrf = CSRFProtect(app)
 
 # Import models and initialize database
 from models import db
