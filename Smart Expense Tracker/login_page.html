@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Expense Splitter</title><!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        /* CSS Variables for Dark Mode */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --navbar-bg: #343a40;
+            --navbar-text: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-card: #2d2d2d;
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+            --navbar-bg: #212529;
+            --navbar-text: #e9ecef;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg) !important;
+        }
+
+        .navbar-brand, .navbar-nav .nav-link {
+            color: var(--navbar-text) !important;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .bg-light {
+            background-color: var(--bg-secondary) !important;
+        }
+
+        .form-control, .form-select {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .table {
+            --bs-table-bg: var(--bg-card);
+            --bs-table-color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            border-bottom-color: var(--border-color);
+        }
+
+        .modal-footer {
+            border-top-color: var(--border-color);
+        }
+    </style>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">Smart<span>Expense</span>Splitter</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">Register</a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        
+            
+        
+    </div>
+
+    <!-- Main Content -->
+    <main class="container py-4">
+        
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow border-0">
+            <div class="card-body p-4 p-md-5">
+                <h1 class="h3 mb-4 fw-bold text-center">Login</h1>
+                <form method="POST" action="">
+                    <input id="csrf_token" name="csrf_token" type="hidden" value="Ijc5MTZhNWI3NTdkNmYzMDE3NGY5ODBkNWNhZWE1NTU3Njk3MjZmM2Ii.aNK_Bg.iMo6Om1f7liOmpsjuwxKK3FVPyc">
+                    <div class="mb-3">
+                        <label class="form-label" for="username">Username</label>
+                        
+                            <input class="form-control" id="username" name="username" placeholder="Enter your username" required type="text" value="">
+                        
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="password">Password</label>
+                        
+                            <input class="form-control" id="password" name="password" placeholder="Enter your password" required type="password" value="">
+                        
+                    </div>
+                    <div class="d-grid gap-2">
+                        <input class="btn btn-primary btn-lg" id="submit" name="submit" type="submit" value="Login">
+                    </div>
+                </form>
+                <div class="text-center mt-4">
+                    <p>Don't have an account? <a href="/register">Register here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo" aria-label="Site footer">
+        <div class="container">
+            <div class="row">
+                <!-- Copyright Section -->
+                <div class="col-md-6" role="region" aria-labelledby="copyright-heading">
+                    <h2 id="copyright-heading" class="visually-hidden">Copyright Information</h2>
+                    <p class="mb-0" itemprop="copyrightNotice">&copy; 2025-2026 Smart Expense Splitter. All rights reserved.</p>
+                </div>
+                
+                <!-- Footer Navigation Section -->
+                <div class="col-md-6 text-md-end" role="region" aria-labelledby="footer-nav-heading">
+                    <h2 id="footer-nav-heading" class="visually-hidden">Footer Navigation</h2>
+                    <nav class="footer-links" aria-label="Legal and company information">
+                        <ul class="list-inline mb-0" role="list">
+                            <li class="list-inline-item" role="listitem">
+                                <a href="/about" aria-label="Learn more about Smart Expense Splitter company and mission" 
+                                   class="text-decoration-none" rel="noopener noreferrer">About</a>
+                            </li>
+                            <li class="list-inline-item" role="listitem">
+                                <a href="/privacy" aria-label="Read our privacy policy and data protection practices" 
+                                   class="text-decoration-none" rel="noopener noreferrer">Privacy</a>
+                            </li>
+                            <li class="list-inline-item" role="listitem">
+                                <a href="/terms" aria-label="Review our terms of service and usage agreements" 
+                                   class="text-decoration-none" rel="noopener noreferrer">Terms</a>
+                            </li>
+                            <li class="list-inline-item" role="listitem">
+                                <a href="/contact" aria-label="Contact Smart Expense Splitter support team" 
+                                   class="text-decoration-none" rel="noopener noreferrer">Contact</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Additional Footer Information -->
+            <div class="row mt-3" role="region" aria-labelledby="footer-info-heading">
+                <h2 id="footer-info-heading" class="visually-hidden">Additional Footer Information</h2>
+                <div class="col-12">
+                    <div class="footer-info text-center text-md-start" aria-label="Application version and technical information">
+                        <small class="text-muted" itemprop="version" aria-label="Application version 1.0.0">
+                            Version 1.0.0 | Built with fights, friendships, and love ❤️
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Dark Mode Script -->
+    <script>
+        // Dark mode functionality
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update toggle button text
+            updateDarkModeToggle();
+        }
+        
+        function updateDarkModeToggle() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            
+            if (darkModeToggle) {
+                if (currentTheme === 'dark') {
+                    darkModeToggle.innerHTML = '<i class="fas fa-sun me-2"></i>Light Mode';
+                } else {
+                    darkModeToggle.innerHTML = '<i class="fas fa-moon me-2"></i>Dark Mode';
+                }
+            }
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateDarkModeToggle();
+            
+            // Add event listener to dark mode toggle button
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', toggleDarkMode);
+            }
+        });
+    </script>
+    <!-- Custom JavaScript -->
+    <script src="/static/js/script.js"></script>
+    
+</body>
+</html>

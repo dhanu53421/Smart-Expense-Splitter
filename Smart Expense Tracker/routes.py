@@ -55,6 +55,15 @@ def currency_settings():
     user_currencies = current_user.get_active_currencies()
     default_currency = current_user.get_default_currency()
     
+    # If user has no currencies, automatically add USD as default
+    if not user_currencies:
+        usd_currency = Currency.query.filter_by(code='USD').first()
+        if usd_currency:
+            current_user.add_currency(usd_currency.id, is_default=True)
+            user_currencies = current_user.get_active_currencies()
+            default_currency = usd_currency
+            flash('Welcome! USD has been set as your default currency. You can change this below.', 'info')
+    
     # Currency settings form
     form = CurrencySettingsForm(user_id=current_user.id)
     add_form = AddCurrencyForm(user_id=current_user.id)
